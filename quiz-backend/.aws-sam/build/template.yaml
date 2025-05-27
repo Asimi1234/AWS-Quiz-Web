@@ -44,3 +44,18 @@ Resources:
               Ref: QuizApi
     Metadata:
       SamResourceId: SubmitAnswerFunction
+  GetAnswers:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetAnswers
+      Handler: app.lambda_handler
+      Events:
+        GetAnswersAPI:
+          Type: Api
+          Properties:
+            Path: /get-answer
+            Method: GET
+            RestApiId:
+              Ref: QuizApi
+    Metadata:
+      SamResourceId: GetAnswers

@@ -18,4 +18,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["SubmitAnswerFunction"]
 
+[function_build_definitions.a7d9c587-4f90-4d98-8180-30f7bca8643f]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\get_answers"
+runtime = "python3.13"
+architecture = "x86_64"
+handler = "app.get_answers"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetAnswers"]
+
 [layer_build_definitions]

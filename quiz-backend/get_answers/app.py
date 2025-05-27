@@ -55,13 +55,6 @@ correct_answers = {
 
 def lambda_handler(event, context):
     try:
-        print("EVENT:", event)
-        body = json.loads(event.get("body", "{}"))
-        question_id = body.get("question_id")
-        answer = body.get("answer")
-
-        is_correct = correct_answers.get(question_id, "").strip().lower() == answer.strip().lower()
-
         return {
             "statusCode": 200,
             "headers": {
@@ -69,13 +62,11 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "*"
             },
-            "body": json.dumps({"correct": is_correct})
+            "body": json.dumps({"correct_answers": correct_answers})
         }
-
     except Exception as e:
-        print("ERROR:", str(e))
         return {
-            "statusCode": 400,
+            "statusCode": 500,
             "headers": {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"

@@ -60,7 +60,7 @@ def lambda_handler(event, context):
         question_id = body.get("question_id")
         answer = body.get("answer")
 
-        is_correct = correct_answers.get(question_id) == answer
+        is_correct = correct_answers.get(question_id, "").strip().lower() == answer.strip().lower()
 
         return {
             "statusCode": 200,

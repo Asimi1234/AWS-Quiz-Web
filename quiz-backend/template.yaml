@@ -43,3 +43,17 @@ Resources:
             Path: /submit-answer
             Method: post
             RestApiId: !Ref QuizApi
+
+ # serverless.yml or template.yaml
+  GetAnswers:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: get_answers/
+      Handler: app.lambda_handler
+      Events:
+        GetAnswersAPI:
+          Type: Api
+          Properties:
+            Path: /get-answer
+            Method: GET
+            RestApiId: !Ref QuizApi
