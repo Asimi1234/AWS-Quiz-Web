@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Card, CardContent, Typography, Button,
-  Box, LinearProgress, Stack
+  Box, LinearProgress, Stack, useMediaQuery
 } from '@mui/material';
 import axios from 'axios';
 
@@ -14,6 +14,7 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
+  const isMobile = useMediaQuery("(max-width:450px)");
 
   useEffect(() => {
     axios.get(`${API_BASE}/start-quiz`)
@@ -91,10 +92,10 @@ const Quiz = () => {
   }
 
   const q = questions[current];
-
+  
   return (
-    <Container maxWidth="sm" sx={{ mt: 2}}>
-      <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+    <Container maxWidth="sm" sx={{ mt: isMobile ? 8: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold', mb: isMobile ? 4 : 1 }}>
         GST 112
       </Typography>
 
