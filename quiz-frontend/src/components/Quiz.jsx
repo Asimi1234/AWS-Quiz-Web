@@ -93,7 +93,7 @@ const Quiz = () => {
   const q = questions[current];
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5 }}>
+    <Container maxWidth="sm" sx={{ mt: 2}}>
       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold' }}>
         GST 112
       </Typography>
