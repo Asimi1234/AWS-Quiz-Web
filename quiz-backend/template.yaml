@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Quiz Backend with API Gateway, Lambda, DynamoDB
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.13
+
+Resources:
+
+  QuizApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'OPTIONS,GET,POST'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  StartQuizFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: start_quiz/
+      Handler: app.lambda_handler
+      Events:
+        GetQuestions:
+          Type: Api
+          Properties:
+            Path: /start-quiz
+            Method: get
+            RestApiId: !Ref QuizApi
+
+  SubmitAnswerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: submit_answer/
+      Handler: app.lambda_handler
+      Events:
+        Submit:
+          Type: Api
+          Properties:
+            Path: /submit-answer
+            Method: post
+            RestApiId: !Ref QuizApi
