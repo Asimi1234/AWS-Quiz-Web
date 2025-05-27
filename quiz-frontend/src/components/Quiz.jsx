@@ -14,6 +14,7 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
   const isMobile = useMediaQuery("(max-width:450px)");
 
   useEffect(() => {
@@ -40,6 +41,9 @@ const Quiz = () => {
   }, [loading, completed]);
 
   const handleAnswer = (questionId, answer) => {
+    // Save selected answer
+    setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
+
     axios.post(`${API_BASE}/submit-answer`, {
       question_id: questionId,
       answer,
@@ -92,9 +96,9 @@ const Quiz = () => {
   }
 
   const q = questions[current];
-  
+
   return (
-    <Container maxWidth="sm" sx={{ mt: isMobile ? 8: 3 }}>
+    <Container maxWidth="sm" sx={{ mt: isMobile ? 8 : 3 }}>
       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold', mb: isMobile ? 4 : 1 }}>
         GST 112
       </Typography>
@@ -113,6 +117,7 @@ const Quiz = () => {
               <Button
                 key={idx}
                 variant="contained"
+                color={selectedAnswers[q.questionId] === opt ? "error" : "primary"}
                 onClick={() => handleAnswer(q.questionId, opt)}
               >
                 {opt}
@@ -137,7 +142,6 @@ const Quiz = () => {
               Next
             </Button>
           </Stack>
-
         </CardContent>
       </Card>
 
