@@ -93,6 +93,7 @@ const CourseSelection = () => {
                   transition: 'transform 0.3s ease',
                   display: 'flex',
                   flexDirection: 'column',
+                  p: isMobile ? '2%' : 0,
                   '&:hover': {
                     transform: 'translateY(-5px)',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
@@ -101,18 +102,18 @@ const CourseSelection = () => {
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box display="flex" alignItems="center" mb={2}>
-                    <SchoolIcon sx={{ fontSize: 30, mr: 1, color: '#0f4c75' }} />
+                    <SchoolIcon sx={{ fontSize:isMobile ? 35 : 30, mr: 1, color: '#0f4c75' }} />
                     <Typography variant="h6" fontWeight="bold">
                       {course.id}
                     </Typography>
                   </Box>
-                  <Typography variant="subtitle1"  sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} gutterBottom>
+                  <Typography variant="subtitle1"  sx={{ fontSize: { xs: '1.3rem', sm: '1.1rem' } }} gutterBottom>
                     {course.name}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem'}}>
                     <strong>Questions:</strong> {course.questions}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem'}}>
                     <strong>Duration:</strong> {course.duration}
                   </Typography>
                 </CardContent>
