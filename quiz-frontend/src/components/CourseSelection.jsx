@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Grid, Card, CardContent,
-  CardActions, Button, Box, CircularProgress, Backdrop
+  CardActions, Button, Box, CircularProgress
 } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 
@@ -85,13 +85,15 @@ const CourseSelection = () => {
                   color: '#000',
                   position: 'relative',
                   transition: 'transform 0.3s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
                   '&:hover': {
                     transform: 'translateY(-5px)',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
                   },
                 }}
               >
-                <CardContent>
+                <CardContent sx={{ flexGrow: 1 }}>
                   <Box display="flex" alignItems="center" mb={2}>
                     <SchoolIcon sx={{ fontSize: 30, mr: 1, color: '#0f4c75' }} />
                     <Typography variant="h6" fontWeight="bold">
@@ -161,10 +163,6 @@ const CourseSelection = () => {
         </Typography>
       </Box>
 
-      {/* Optional full-page loader */}
-      <Backdrop open={!!loadingCourse} sx={{ color: '#fff', zIndex: 1300 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
     </Box>
   );
 };

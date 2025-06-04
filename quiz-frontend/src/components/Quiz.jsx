@@ -22,47 +22,95 @@ const Quiz = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Move handleFinalSubmit above useEffect to fix ESLint warning
- const handleFinalSubmit = useCallback(() => {
-  axios.get(`${API_BASE}/get-answer?courseId=${courseId}`)
-    .then(res => {
-      const corrects = res.data.correct_answers; // e.g. { questionId: correctAnswer, ... }
-      setCorrectAnswers(corrects);
-      
-      // Calculate final score by comparing user answers to correct answers
-      let finalScore = 0;
-      for (const qId in corrects) {
-        if (answers[qId]?.answer === corrects[qId]) {
-          finalScore++;
+  // Copy/Paste Prevention Functions
+  const handleKeyDown = (e) => {
+    if (completed || loading) return;
+    
+    // Prevent copy (Ctrl+C, Ctrl+A, Ctrl+X)
+    if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 65 || e.keyCode === 88)) {
+      e.preventDefault();
+      return false;
+    }
+    // Prevent paste (Ctrl+V)
+    if (e.ctrlKey && e.keyCode === 86) {
+      e.preventDefault();
+      return false;
+    }
+    // Prevent F12 (Developer Tools)
+    if (e.keyCode === 123) {
+      e.preventDefault();
+      return false;
+    }
+    // Prevent Ctrl+Shift+I (Developer Tools)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+      e.preventDefault();
+      return false;
+    }
+    // Prevent Ctrl+U (View Source)
+    if (e.ctrlKey && e.keyCode === 85) {
+      e.preventDefault();
+      return false;
+    }
+  };
+
+  const handleContextMenu = (e) => {
+    if (completed || loading) return;
+    e.preventDefault();
+    return false;
+  };
+
+  const handleSelectStart = (e) => {
+    if (completed || loading) return;
+    e.preventDefault();
+    return false;
+  };
+
+  const handleDragStart = (e) => {
+    if (completed || loading) return;
+    e.preventDefault();
+    return false;
+  };
+
+  // Move handleFinalSubmit above useEffect to prevent ESLint warning
+  const handleFinalSubmit = useCallback(() => {
+    axios.get(`${API_BASE}/get-answer?courseId=${courseId}`)
+      .then(res => {
+        const corrects = res.data.correct_answers; 
+        setCorrectAnswers(corrects);
+        
+        // Calculate final score by comparing user answers to correct answers
+        let finalScore = 0;
+        for (const qId in corrects) {
+          if (answers[qId]?.answer === corrects[qId]) {
+            finalScore++;
+          }
         }
-      }
-      setScore(finalScore);  // set final score here
-      
-      setCompleted(true);
-    })
-    .catch(err => {
-      console.error("Error fetching correct answers:", err);
-      alert("Unable to fetch correct answers.");
-    });
-}, [courseId, answers]);
+        setScore(finalScore);  //used to set final score
+        
+        setCompleted(true);
+      })
+      .catch(err => {
+        console.error("Error fetching correct answers:", err);
+        alert("Unable to fetch correct answers.");
+      });
+  }, [courseId, answers]);
 
   useEffect(() => {
-  setLoading(true);
-  axios.get(`${API_BASE}/start-quiz?courseId=${courseId}`)
-    .then(res => {
-      setQuestions(res.data.questions);
-      setScore(0);           // reset score
-      setAnswers({});        // clear previous answers
-      setCompleted(false);
-      setTimeLeft(300);
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error("Error loading quiz:", err);
-      alert("Failed to load quiz.");
-    });
-}, [courseId]);
-
+    setLoading(true);
+    axios.get(`${API_BASE}/start-quiz?courseId=${courseId}`)
+      .then(res => {
+        setQuestions(res.data.questions);
+        setScore(0);           // used to reset score
+        setAnswers({});        // used to clear previous answers
+        setCompleted(false);
+        setTimeLeft(300);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading quiz:", err);
+        alert("Failed to load quiz.");
+      });
+  }, [courseId]);
 
   useEffect(() => {
     if (loading || completed) return;
@@ -79,28 +127,25 @@ const Quiz = () => {
     return () => clearInterval(timer);
   }, [loading, completed, handleFinalSubmit]);
 
-const handleAnswer = (questionId, answer) => {
-  axios.post(`${API_BASE}/submit-answer`, {
-    question_id: questionId,
-    answer,
-    courseId: courseId
-  })
-  .then(res => {
-    const isCorrect = res.data.correct; // Can keep for UI feedback if needed
-    
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: { answer, correct: isCorrect }
-    }));
-    
-    // Remove incremental setScore here!
-  })
-  .catch(err => {
-    console.error("Error submitting answer:", err);
-    alert("Failed to submit answer.");
-  });
-};
-
+  const handleAnswer = (questionId, answer) => {
+    axios.post(`${API_BASE}/submit-answer`, {
+      question_id: questionId,
+      answer,
+      courseId: courseId
+    })
+    .then(res => {
+      const isCorrect = res.data.correct; 
+      
+      setAnswers(prev => ({
+        ...prev,
+        [questionId]: { answer, correct: isCorrect }
+      }));
+    })
+    .catch(err => {
+      console.error("Error submitting answer:", err);
+      alert("Failed to submit answer.");
+    });
+  };
 
   const handleNext = () => {
     if (current + 1 < questions.length) {
@@ -126,11 +171,22 @@ const handleAnswer = (questionId, answer) => {
 
   return (
     <Box
+      onKeyDown={handleKeyDown}
+      onContextMenu={handleContextMenu}
+      onSelectStart={handleSelectStart}
+      onDragStart={handleDragStart}
+      tabIndex={0} // used to make the Box focusable to capture keyboard events
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(to right, #0f2027, #203a43, #2c5364)',
         color: 'white',
-        py: 6
+        py: 6,
+        outline: 'none', 
+        // Additional CSS for copy prevention
+        userSelect: completed || loading ? 'auto' : 'none',
+        WebkitUserSelect: completed || loading ? 'auto' : 'none',
+        MozUserSelect: completed || loading ? 'auto' : 'none',
+        msUserSelect: completed || loading ? 'auto' : 'none',
       }}
     >
       <Container maxWidth="sm">
@@ -185,17 +241,31 @@ const handleAnswer = (questionId, answer) => {
           <>
             <Typography
               variant="h4"
-              sx={{ textAlign: 'center', fontWeight: 'bold', mb: 4 }}
+              sx={{ 
+                textAlign: 'center', 
+                fontWeight: 'bold', 
+                mb: 4,
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}
             >
               {courseId.toUpperCase()}
             </Typography>
 
-            <Card elevation={5} sx={{ borderRadius: 3, p: 2 }}>
+            <Card 
+              elevation={5} 
+              sx={{ 
+                borderRadius: 3, 
+                p: 2,
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}
+            >
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" gutterBottom sx={{ userSelect: 'none' }}>
                   Question {current + 1} of {questions.length}
                 </Typography>
-                <Typography variant="body1" sx={{ mb: 3 }}>
+                <Typography variant="body1" sx={{ mb: 3, userSelect: 'none' }}>
                   {q?.question}
                 </Typography>
 
@@ -209,6 +279,8 @@ const handleAnswer = (questionId, answer) => {
                       sx={{
                         backgroundColor: userAnswer === opt ? '#0D47A1' : '#1976d2',
                         color: 'white',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
                         '&:hover': {
                           backgroundColor: '#1565c0'
                         }
@@ -267,7 +339,7 @@ const handleAnswer = (questionId, answer) => {
             </Box>
 
             <Box mt={2} textAlign="center">
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ userSelect: 'none' }}>
                 Time left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
               </Typography>
             </Box>
