@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container, Typography, Grid, Card, CardContent,
+  Container, Typography, Card, CardContent,
   CardActions, Button, Box, CircularProgress,
-  useMediaQuery
+  useMediaQuery, useTheme
 } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 
@@ -31,13 +31,29 @@ const courses = [
 const CourseSelection = () => {
   const navigate = useNavigate();
   const [loadingCourse, setLoadingCourse] = useState(null);
-  const isMobile = useMediaQuery('(max-width:600px)');
+  const theme = useTheme();
+  
+  // Responsive breakpoints
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const handleSelectCourse = (courseId) => {
     setLoadingCourse(courseId);
     setTimeout(() => {
       navigate(`/quiz/${courseId}`);
-    }, 1500); // Simulate loading delay (1.5 seconds)
+    }, 1500);
+  };
+
+  // Calculate card dimensions based on screen size
+  const getCardWidth = () => {
+    if (isMobile) return '100%';
+    if (isTablet) return 280;
+    return 320;
+  };
+
+  const getCardHeight = () => {
+    if (isMobile) return 250;
+    return 260;
   };
 
   return (
@@ -74,85 +90,97 @@ const CourseSelection = () => {
       </Container>
 
       {/* Main content */}
-      <Container sx={{ flex: '1' }}>
-        <Grid container spacing={4} justifyContent="center" sx={{ mb: 7 }}>
+      <Container sx={{ flex: 1 }}>
+        <Box 
+          display="flex" 
+          flexWrap="wrap" 
+          justifyContent="center" 
+          gap={5}
+          sx={{ mb: 7 }}
+        >
           {courses.map((course) => (
-            <Grid item xs={12} sm={6} md={4} key={course.id}>
-              <Card
-                sx={{
-                  height: {
-                    xs: 260,
-                    sm: 'auto',
-                    md: 300
-                  },
-                  width: isMobile ? 260 : 350, 
-                  borderRadius: 3,
-                  backgroundColor: '#ffffffdd',
-                  color: '#000',
-                  position: 'relative',
-                  transition: 'transform 0.3s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  p: isMobile ? '10%' : 0,
-                  ml:isMobile ? '-10%' : 0,
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-                  },
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
-                    <SchoolIcon sx={{ fontSize:isMobile ? 35 : 30, mr: 1, color: '#0f4c75' }} />
-                    <Typography variant="h6" fontWeight="bold">
-                      {course.id}
-                    </Typography>
-                  </Box>
-                  <Typography variant="subtitle1"  sx={{ fontSize: { xs: '1.3rem', sm: '1.1rem' } }} gutterBottom>
-                    {course.name}
+            <Card
+              key={course.id}
+              sx={{
+                width: getCardWidth(),
+                height: getCardHeight(),
+                maxWidth: 320,
+                borderRadius: 3,
+                backgroundColor: '#ffffffdd',
+                color: '#000',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+                <Box display="flex" alignItems="center" mb={2}>
+                  <SchoolIcon sx={{ fontSize: 30, mr: 1, color: '#0f4c75' }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    {course.id}
                   </Typography>
-                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem', mb: 1}}>
-                    <strong>Questions:</strong> {course.questions}
-                  </Typography>
-                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem'}}>
-                    <strong>Duration:</strong> {course.duration}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ backgroundColor: '#0f4c75' }}
-                    onClick={() => handleSelectCourse(course.id)}
-                    disabled={!!loadingCourse}
-                  >
-                    {loadingCourse === course.id ? 'Loading...' : 'Start Quiz'}
-                  </Button>
-                </CardActions>
+                </Box>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    fontSize: '0.95rem',
+                    lineHeight: 1.3,
+                    mb: 2,
+                    minHeight: '40px', 
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {course.name}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 0.5, lineHeight: '30px' }}>
+                  <strong>Questions:</strong> {course.questions}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Duration:</strong> {course.duration}
+                </Typography>
+              </CardContent>
 
-                {/* Inline spinner if this card is loading */}
-                {loadingCourse === course.id && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'rgba(255,255,255,0.8)',
-                      borderRadius: 3,
-                    }}
-                  >
-                    <CircularProgress />
-                  </Box>
-                )}
-              </Card>
-            </Grid>
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  sx={{ backgroundColor: '#0f4c75' }}
+                  onClick={() => handleSelectCourse(course.id)}
+                  disabled={!!loadingCourse}
+                >
+                  {loadingCourse === course.id ? 'Loading...' : 'Start Quiz'}
+                </Button>
+              </CardActions>
+
+              {loadingCourse === course.id && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    borderRadius: 3,
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+            </Card>
           ))}
-        </Grid>
+        </Box>
       </Container>
 
       {/* Footer */}
@@ -170,7 +198,6 @@ const CourseSelection = () => {
           © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights reserved.
         </Typography>
       </Box>
-
     </Box>
   );
 };
