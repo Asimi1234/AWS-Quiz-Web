@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Grid, Card, CardContent,
-  CardActions, Button, Box, CircularProgress
+  CardActions, Button, Box, CircularProgress,
+  useMediaQuery
 } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 
@@ -30,6 +31,7 @@ const courses = [
 const CourseSelection = () => {
   const navigate = useNavigate();
   const [loadingCourse, setLoadingCourse] = useState(null);
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const handleSelectCourse = (courseId) => {
     setLoadingCourse(courseId);
@@ -78,8 +80,12 @@ const CourseSelection = () => {
             <Grid item xs={12} sm={6} md={4} key={course.id}>
               <Card
                 sx={{
-                  height: '100%',
-                  width: 300,
+                  height: {
+                    xs: 260,
+                    sm: 'auto',
+                    md: 300
+                  },
+                  width: isMobile ? 300 : 350, 
                   borderRadius: 3,
                   backgroundColor: '#ffffffdd',
                   color: '#000',
@@ -100,7 +106,7 @@ const CourseSelection = () => {
                       {course.id}
                     </Typography>
                   </Box>
-                  <Typography variant="subtitle1" gutterBottom>
+                  <Typography variant="subtitle1"  sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} gutterBottom>
                     {course.name}
                   </Typography>
                   <Typography variant="body2">
