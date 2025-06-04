@@ -1,8 +1,8 @@
 import json
 import random
 
-def lambda_handler(event, context):
-    questions = [
+QUESTION_BANK = {
+    "GST112" : [
         {"questionId": "q1", "question": "Who were the first European to explore the West African coasts?", "options": ["Portuguese", "Spanish", "British", "French"]},
         {"questionId": "q2", "question": "Which language serves as the official language in Nigeria?", "options": ["English", "Yoruba", "Edo", "Hausa"]},
         {"questionId": "q3", "question": "In which part of Nigeria do Christians predominantly reside?", "options": ["South", "North", "East", "West"]},
@@ -53,14 +53,208 @@ def lambda_handler(event, context):
         {"questionId": "q48", "question": "The ______ are next in rank to the Supreme Being.", "options": ["Divinities", "Esu", "Magic", "Spirit"]},
         {"questionId": "q49", "question": "______ is spoken of as the idea of partial rebirth.", "options": ["Reincarnation", "Divinities", "Magic", "Context"]},
         {"questionId": "q50", "question": "______ is the art of using the available force of nature to prevent diseases and restore health.", "options": ["Magic", "Divinities", "Spirit", "Medicine"]}
-    ]
-    selected_questions = random.sample(questions, 25)
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*"
-        },
-        "body": json.dumps({"questions": selected_questions})
+    ],
+    "GET102" : [
+    ],
+     "CHM102": [
+    {
+      "questionId": "q1",
+      "question": "The alkali metals are characterised by ________  in their outermost shell",
+      "options": ["one s-electron", "two s-electron", "three s-electron", "zero s-electron"]
+    },
+    {
+      "questionId": "q2",
+      "question": "Group 1 metals melting and boiling point ________ as we go down the group",
+      "options": ["decreases", "increases", "fluctuates", "remains constant"]
+    },
+    {
+      "questionId": "q3",
+      "question": "One of the most important applications of Potassium is in the manufacture of __________",
+      "options": ["batteries for electronics and vehicles", "Soap and edible salt", "Fertilizers and biochemical substrates", "Optical glasses and laser coolants"]
+    },
+    {
+      "questionId": "q4",
+      "question": "Which of the following alkaline earth metals gives the LEAST soluble sulphate?",
+      "options": ["Mg", "Ca", "Sr", "Ba"]
+    },
+    {
+      "questionId": "q5",
+      "question": "The Group 3A elements are also called boron family because boron is  __________ of the group.",
+      "options": ["the first member", "the last member", "a non-member", "an intermediate member"]
+    },
+    {
+      "questionId": "q6",
+      "question": "All group 3A elements have +3 oxidation state EXCEPT  thallium which has _______",
+      "options": ["+1", "-1", "+2", "-2"]
+    },
+    {
+      "questionId": "q7",
+      "question": "The group iv A elements are characterised by ________  in their outermost shell",
+      "options": ["zero s-electron and zero p-electron", "two s-electron and one p-electron", "two s-electron and three p-electron", "two s-electron and two p-electron"]
+    },
+    {
+      "questionId": "q8",
+      "question": "Which of the following is diamagnetic?",
+      "options": ["Mn2+", "Ni2+", "Sc3+", "Cu3+"]
+    },
+    {
+      "questionId": "q9",
+      "question": "Which of the following statement is not correct?",
+      "options": [
+        "in a stable nucleus, the nuclear forces of attraction between the nucleons are greater than the electrostatic force of repulsion between the protons.",
+        "in an unstable nucleus, the electrostatic force of repulsion between the protons are greater than the nuclear forces of attraction between the nucleons",
+        "if the nucleus is stable, it will disintegrate",
+        "none of the above."
+      ]
+    },
+    {
+      "questionId": "q10",
+      "question": "Which of the following is the possible oxidation state of 26Fe?",
+      "options": ["+1 to +3", "+1 to +6", "+2 to +7", "+2 to +6"]
+    },
+    {
+      "questionId": "q11",
+      "question": "Calculate the amount of a radioactive element (t1/2 = 140days) to which 1g of the element will reduce to in 560days.",
+      "options": ["0.0215g", "0.0445g", "0.0625g", "0.835g"]
+    },
+    {
+      "questionId": "q12",
+      "question": "Calculate the spin only moment of Cr3+ ; d3",
+      "options": ["3.87BM", "1.23BM", "2.09BM", "4.21BM"]
+    },
+    {
+      "questionId": "q13",
+      "question": "According to the odd-even rules for nuclear stability, which of the following will be stable?",
+      "options": ["64Cu-29", "24Mg-12", "14N-7", "24Na-11"]
+    },
+    {
+      "questionId": "q14",
+      "question": "Transition metals have high ionization energy due to their ………..",
+      "options": ["large atomic size", "high melting point", "small atomic radii", "high reactivity"]
+    },
+    {
+      "questionId": "q15",
+      "question": "Which of the following is not correct?",
+      "options": [
+        "the colour of transition metal complex depends on the nature of the metal",
+        "the oxidation state of the transition metal doesn’t determine the colour",
+        "the nature of the ligand has effects on the colour of the complex",
+        "the number of ligand has effects on the colour of the complex."
+      ]
+    },
+    {
+      "questionId": "q16",
+      "question": "Who is regarded as the father of modern organic chemistry?",
+      "options": ["Antoine Lavoisier", "Friedrich Wöhler", "Dmitri Mendeleev", "None of the above"]
+    },
+    {
+      "questionId": "q17",
+      "question": "A pure organic substance has the following characteristic physical properties except",
+      "options": ["crystalline form", "refractive index and specific gravity", "solubility and volatility", "melting point and boiling point"]
+    },
+    {
+      "questionId": "q18",
+      "question": "The development of structural theories like valence theory by Kekulé and Couper in 1858 helped scientists understand:",
+      "options": ["the origin of life", "the properties of organic compounds", "how to create explosives", "the role of enzymes in reactions"]
+    },
+    {
+      "questionId": "q19",
+      "question": "Which of the following is NOT a major focus of organic chemistry that emerged in the 19th century?",
+      "options": ["isolating natural compounds", "developing synthetic methods", "studying the composition of stars", "analyzing reaction mechanisms"]
+    },
+    {
+      "questionId": "q20",
+      "question": "What elements are most commonly found in organic molecules?",
+      "options": ["Carbon, hydrogen, nitrogen", "Oxygen, phosphorus, sulfur", "Nitrogen, sulfur, phosphorus", "Carbon, hydrogen, oxygen"]
+    },
+    {
+      "questionId": "q21",
+      "question": "Which type of hydrocarbons are nonreactive due to lack of polarity?",
+      "options": ["Alkynes", "Alkenes", "Alkanes", "Aromatics"]
+    },
+    {
+      "questionId": "q22",
+      "question": "What causes polarity in organic molecules?",
+      "options": ["Even distribution of electron density", "Non-polar C-H bonds", "Non-polar C-C bonds", "Imbalance in electron density"]
+    },
+    {
+      "questionId": "q23",
+      "question": "Complete oxidation of Primary alcohol using KMnO4/H+ will produced compound with the general formula",
+      "options": ["RCHO", "RCOOR", "RCOR", "RCOOH"]
+    },
+    {
+      "questionId": "q24",
+      "question": "The general formula for aldehyde is ..........",
+      "options": ["RCHO", "R(CO)2O", "ROH", "ROOH"]
+    },
+    {
+      "questionId": "q25",
+      "question": "Reduction of this compound CH3CH2CH2CONH2 will result to formation of .........",
+      "options": ["propylamine", "Butylamine", "Hexylamine", "N-methyl-ethylamine"]
+    },
+    {
+      "questionId": "q26",
+      "question": "The functional group of an alkanones and ether are?",
+      "options": ["C-O-C and C-C", "CHO and C=O", "C≡O and C═C-", "C=O and -O-"]
+    },
+    {
+      "questionId": "q27",
+      "question": "The condensed formula for 2-methyl butan-2-ol is .........",
+      "options": ["CH3CH2(CH3)OHCH3", "CH3CH2(CH3)OHCH2CH3", "CH3C(CH3)OHCH2CH3", "C2H5OHC2H5"]
+    },
+    {
+      "questionId": "q28",
+      "question": "The major product formed during dehydration of butan-2-ol using conc. H2SO4 at 180oC is ............",
+      "options": ["butene", "but-3-ene", "but-2-ene", "but-4-ene"]
+    },
+    {
+      "questionId": "q29",
+      "question": "The ester CH3COOC2H5   is produced by the reaction of --------- and ---------",
+      "options": ["ethanoic acid and methanol", "methanal and acetic acid", "ethanol and ethanoic acid", "methanoic acid and ethanol"]
+    },
+    {
+      "questionId": "q30",
+      "question": "A method of separating mixtures based on differences in their volatilities in a boiling liquid mixture is called",
+      "options": ["Fractional distillation", "Distillation", "Crystallization", "Fractional Crystallization"]
     }
+  ]
+}
+
+def lambda_handler(event, context):
+    try:
+        course_id = None
+        if event.get("queryStringParameters"):
+            course_id_raw = event["queryStringParameters"].get("courseId")
+            if course_id_raw:
+                course_id = course_id_raw.upper()
+        else:
+            body = json.loads(event.get("body", "{}"))
+            course_id_raw = body.get("courseId")
+            if course_id_raw:
+                course_id = course_id_raw.upper()
+
+        if not course_id or course_id not in QUESTION_BANK:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "Invalid or missing courseId"})
+            }
+
+        questions = QUESTION_BANK[course_id]
+        selected_questions = random.sample(questions, min(25, len(questions)))
+
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+            },
+            "body": json.dumps({"questions": selected_questions})
+        }
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }

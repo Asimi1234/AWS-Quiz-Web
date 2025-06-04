@@ -4,7 +4,7 @@ Description: Quiz Backend with API Gateway, Lambda, DynamoDB
 Globals:
   Function:
     Timeout: 10
-    Runtime: python3.13
+    Runtime: python3.11
 Resources:
   QuizApi:
     Type: AWS::Serverless::Api

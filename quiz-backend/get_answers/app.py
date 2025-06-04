@@ -1,6 +1,7 @@
 import json
 
-correct_answers = {
+ANSWER_BANK = {
+"GST112" : {
     "q1": "Portuguese",
     "q2": "English",
     "q3": "South",
@@ -51,19 +52,73 @@ correct_answers = {
     "q48": "Divinities",
     "q49": "Reincarnation",
     "q50": "Magic"
+},
+ "GET102" : {
+     "q1": "stay",
+ },
+"CHM102":
+     {
+    "q1": "one s-electron",
+    "q2": "decreases",
+    "q3": "Fertilizers and biochemical substrates",
+    "q4": "Ba",
+    "q5": "the first member",
+    "q6": "+1",
+    "q7": "two s-electron and two p-electron",
+    "q8": "Sc3+",
+    "q9": "if the nucleus is stable, it will disintegrate",
+    "q10": "+2 to +6",
+    "q11": "0.0625g",
+    "q12": "3.87BM",
+    "q13": "14N-7",
+    "q14": "small atomic radii",
+    "q15": "the oxidation state of the transition metal doesn’t determine the colour",
+    "q16": "Friedrich Wöhler",
+    "q17": "crystalline form",
+    "q18": "the properties of organic compounds",
+    "q19": "studying the composition of stars",
+    "q20": "Carbon, hydrogen, oxygen",
+    "q21": "Alkanes",
+    "q22": "Imbalance in electron density",
+    "q23": "RCOOH",
+    "q24": "RCHO",
+    "q25": "Butylamine",
+    "q26": "C=O and -O-",
+    "q27": "CH3C(CH3)OHCH2CH3",
+    "q28": "but-2-ene",
+    "q29": "ethanol and ethanoic acid",
+    "q30": "Fractional distillation"
+  }
 }
 
 def lambda_handler(event, context):
     try:
+        # Extract courseId from query params or body
+        if event.get("queryStringParameters"):
+            course_id = event["queryStringParameters"].get("courseId")
+        else:
+            body = json.loads(event.get("body", "{}"))
+            course_id = body.get("courseId")
+
+        if not course_id or course_id not in ANSWER_BANK:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "Invalid or missing courseId"})
+            }
+
+        correct_answers = ANSWER_BANK[course_id]
+
         return {
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "*"
+                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
             },
             "body": json.dumps({"correct_answers": correct_answers})
         }
+
     except Exception as e:
         return {
             "statusCode": 500,
