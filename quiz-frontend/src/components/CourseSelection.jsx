@@ -85,7 +85,7 @@ const CourseSelection = () => {
                     sm: 'auto',
                     md: 300
                   },
-                  width: isMobile ? 300 : 350, 
+                  width: isMobile ? 260 : 350, 
                   borderRadius: 3,
                   backgroundColor: '#ffffffdd',
                   color: '#000',
@@ -93,7 +93,8 @@ const CourseSelection = () => {
                   transition: 'transform 0.3s ease',
                   display: 'flex',
                   flexDirection: 'column',
-                  p: isMobile ? '2%' : 0,
+                  p: isMobile ? '10%' : 0,
+                  ml:isMobile ? '-10%' : 0,
                   '&:hover': {
                     transform: 'translateY(-5px)',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
@@ -110,7 +111,7 @@ const CourseSelection = () => {
                   <Typography variant="subtitle1"  sx={{ fontSize: { xs: '1.3rem', sm: '1.1rem' } }} gutterBottom>
                     {course.name}
                   </Typography>
-                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem'}}>
+                  <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem', mb: 1}}>
                     <strong>Questions:</strong> {course.questions}
                   </Typography>
                   <Typography variant="body2" sx={{fontSize: isMobile ? '0.9rem' : '1rem'}}>
