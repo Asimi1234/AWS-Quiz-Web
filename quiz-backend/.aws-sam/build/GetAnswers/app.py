@@ -241,45 +241,91 @@ ANSWER_BANK = {
     "q30": "Fractional distillation"
   }
 }
+
 def normalize(text):
-    return " ".join(text.strip().lower().split())
+    """Normalize text for comparison"""
+    if not text:
+        return ""
+    return " ".join(str(text).strip().lower().split())
 
 def lambda_handler(event, context):
-    try:
-        # Extract courseId
-        if event.get("queryStringParameters"):
-            course_id = event["queryStringParameters"].get("courseId")
-        else:
-            body = json.loads(event.get("body", "{}"))
-            course_id = body.get("courseId")
-
-        if not course_id or course_id not in ANSWER_BANK:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "Invalid or missing courseId"})
-            }
-
-        correct_answers = ANSWER_BANK[course_id]
-        # Normalize all correct answers:
-        normalized_correct_answers = {k: normalize(v) for k, v in correct_answers.items()}
-
+    print("Received event:", json.dumps(event))
+    
+    # CORS headers
+    cors_headers = {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
+    }
+    
+    # Handle CORS preflight
+    if event.get("httpMethod") == "OPTIONS":
         return {
             "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-            },
-            "body": json.dumps({"correct_answers": normalized_correct_answers})
+            "headers": cors_headers,
+            "body": json.dumps({"message": "CORS preflight passed"})
         }
-
+    
+    try:
+        # Extract courseId from query parameters or body
+        course_id = None
+        
+        # Try query parameters first (GET request)
+        if event.get("queryStringParameters"):
+            course_id = event["queryStringParameters"].get("courseId")
+        
+        # Try body if no query parameters (POST request)
+        if not course_id and event.get("body"):
+            try:
+                body = json.loads(event["body"])
+                course_id = body.get("courseId")
+            except json.JSONDecodeError:
+                pass
+        
+        # Validate courseId
+        if not course_id:
+            return {
+                "statusCode": 400,
+                "headers": cors_headers,
+                "body": json.dumps({
+                    "success": False,
+                    "error": "Missing courseId parameter"
+                })
+            }
+        
+        if course_id not in ANSWER_BANK:
+            return {
+                "statusCode": 400,
+                "headers": cors_headers,
+                "body": json.dumps({
+                    "success": False,
+                    "error": f"Course '{course_id}' not found in answer bank"
+                })
+            }
+        
+        # Get and normalize correct answers
+        correct_answers = ANSWER_BANK[course_id]
+        normalized_correct_answers = {k: normalize(v) for k, v in correct_answers.items()}
+        
+        return {
+            "statusCode": 200,
+            "headers": cors_headers,
+            "body": json.dumps({
+                "success": True,
+                "courseId": course_id,
+                "correct_answers": normalized_correct_answers,
+                "total_questions": len(normalized_correct_answers)
+            })
+        }
+        
     except Exception as e:
+        print(f"Error: {str(e)}")
         return {
             "statusCode": 500,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": json.dumps({"error": str(e)})
+            "headers": cors_headers,
+            "body": json.dumps({
+                "success": False,
+                "error": f"Internal server error: {str(e)}"
+            })
         }

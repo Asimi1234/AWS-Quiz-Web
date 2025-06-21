@@ -18,7 +18,16 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["SubmitAnswerFunction"]
 
-[function_build_definitions.559fa107-a30b-49cd-b37c-0adfeb77dff9]
+[function_build_definitions.0dc1c37c-8cd8-4aa6-bb63-877fb7cdce53]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\user_attempts"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["UserAttemptsFunction"]
+
+[function_build_definitions.5f943215-fc14-4088-ac1b-32439af31d25]
 codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\get_answers"
 runtime = "python3.11"
 architecture = "x86_64"
@@ -26,5 +35,14 @@ handler = "app.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetAnswers"]
+
+[function_build_definitions.b817059d-6b6d-4bcb-83df-d1ad20fd4b6a]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\check_attempts"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["CheckAttemptsFunction"]
 
 [layer_build_definitions]

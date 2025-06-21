@@ -1,3 +1,4 @@
+
 import json
 import random
 
@@ -373,26 +374,91 @@ QUESTION_BANK = {
 }
 
 def lambda_handler(event, context):
+    # Enable CORS for preflight requests
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+            },
+            "body": ""
+        }
+    
     try:
+        # Debug logging
+        print(f"Event: {json.dumps(event)}")
+        
         course_id = None
-        if event.get("queryStringParameters"):
+        
+        # Check query string parameters first (for GET requests)
+        if event.get("queryStringParameters") and event["queryStringParameters"]:
             course_id_raw = event["queryStringParameters"].get("courseId")
             if course_id_raw:
                 course_id = course_id_raw.upper()
-        else:
-            body = json.loads(event.get("body", "{}"))
-            course_id_raw = body.get("courseId")
-            if course_id_raw:
-                course_id = course_id_raw.upper()
+                print(f"Course ID from query params: {course_id}")
+        
+        # Check request body (for POST requests)
+        if not course_id and event.get("body"):
+            try:
+                body = json.loads(event["body"])
+                course_id_raw = body.get("courseId")
+                if course_id_raw:
+                    course_id = course_id_raw.upper()
+                    print(f"Course ID from body: {course_id}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                return {
+                    "statusCode": 400,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                        "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+                    },
+                    "body": json.dumps({"error": "Invalid JSON in request body"})
+                }
 
-        if not course_id or course_id not in QUESTION_BANK:
+        # Validate course ID
+        if not course_id:
             return {
                 "statusCode": 400,
-                "body": json.dumps({"error": "Invalid or missing courseId"})
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+                },
+                "body": json.dumps({
+                    "error": "Missing courseId parameter",
+                    "availableCourses": list(QUESTION_BANK.keys())
+                })
             }
 
+        if course_id not in QUESTION_BANK:
+            return {
+                "statusCode": 400,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+                },
+                "body": json.dumps({
+                    "error": f"Invalid courseId: {course_id}",
+                    "availableCourses": list(QUESTION_BANK.keys())
+                })
+            }
+
+        # Get questions for the course
         questions = QUESTION_BANK[course_id]
-        selected_questions = random.sample(questions, min(25, len(questions)))
+        
+        # Select random questions (up to 25)
+        num_questions = min(25, len(questions))
+        selected_questions = random.sample(questions, num_questions)
+        
+        print(f"Selected {len(selected_questions)} questions for course {course_id}")
 
         return {
             "statusCode": 200,
@@ -402,11 +468,26 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
                 "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
             },
-            "body": json.dumps({"questions": selected_questions})
+            "body": json.dumps({
+                "success": True,
+                "courseId": course_id,
+                "totalQuestions": len(selected_questions),
+                "questions": selected_questions
+            })
         }
 
     except Exception as e:
+        print(f"Error: {str(e)}")
         return {
             "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+            },
+            "body": json.dumps({
+                "error": "Internal server error",
+                "message": str(e)
+            })
         }
