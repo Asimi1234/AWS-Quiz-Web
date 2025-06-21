@@ -2,17 +2,33 @@ import React from "react";
 import { Stack, Typography, Box } from "@mui/material";
 import TimerIcon from "@mui/icons-material/Timer";
 
-const QuizHeader = ({ timeLeft, courseId, attemptsLeft, isAdmin, answeredCount, totalQuestions }) => {
+const QuizHeader = ({
+  timeLeft,
+  courseId,
+  attemptsLeft,
+  isAdmin,
+  answeredCount,
+  totalQuestions,
+}) => {
   return (
     <>
-      <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={2}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="center"
+        spacing={1}
+        mb={2}
+      >
         <TimerIcon sx={{ fontSize: 26 }} />
         <Typography sx={{ fontSize: 18 }}>
           {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
         </Typography>
       </Stack>
 
-      <Typography variant="h4" sx={{ textAlign: "center", fontWeight: "bold", mb: 4 }}>
+      <Typography
+        variant="h4"
+        sx={{ textAlign: "center", fontWeight: "bold", mb: 4 }}
+      >
         {(courseId || "").toUpperCase()}
       </Typography>
 
@@ -29,7 +45,7 @@ const QuizHeader = ({ timeLeft, courseId, attemptsLeft, isAdmin, answeredCount, 
         }}
       >
         {isAdmin ? (
-          <>Admin Mode: You have {attemptsLeft} free attempt(s) left.</>
+          <>Admin Mode: You have {attemptsLeft} admin attempt(s) left.</>
         ) : (
           <>You have {attemptsLeft} free attempt(s) left.</>
         )}

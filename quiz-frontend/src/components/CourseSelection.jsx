@@ -1,5 +1,8 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   Container,
   Typography,
@@ -14,6 +17,7 @@ import {
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
 
+// List of available courses
 const courses = [
   {
     id: "GST112",
@@ -35,6 +39,9 @@ const courses = [
   },
 ];
 
+// API base URL — replace with your live API Gateway URL
+const API_BASE_URL = process.env.REACT_APP_API_BASE;
+
 const CourseSelection = () => {
   const navigate = useNavigate();
   const [loadingCourse, setLoadingCourse] = useState(null);
@@ -44,14 +51,63 @@ const CourseSelection = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  const handleSelectCourse = (courseId) => {
+  // Handle course selection and check attempts
+  // Handle course selection and check attempts
+  const handleSelectCourse = async (courseId) => {
     setLoadingCourse(courseId);
-    setTimeout(() => {
-      navigate(`/quiz/${courseId}`);
-    }, 1500);
+    try {
+      const userId = localStorage.getItem("userId") || "testUser";
+
+      // Check attempts WITHOUT incrementing using the new check-attempts endpoint
+      const response = await axios.get(
+        `${API_BASE_URL}/check-attempts?user_id=${encodeURIComponent(userId)}&course_id=${encodeURIComponent(courseId)}`,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("🔍 API Response:", response.data); // Debug log
+
+      // Check if user can attempt the quiz - fix the condition
+      if (response.data.success && response.data.remaining_attempts > 0) {
+        const remainingAttempts = response.data.remaining_attempts;
+        toast.success(`Starting quiz! You have ${remainingAttempts} attempts remaining.`);
+
+        // Navigate to quiz page - attempts will be incremented when quiz is actually submitted
+        setTimeout(() => {
+          navigate(`/quiz/${courseId}`);
+        }, 1200);
+      } else {
+        navigate(`/quiz/${courseId}`);
+      }
+
+    } catch (error) {
+      console.error("Error checking attempts:", error);
+
+      // Handle different error scenarios
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        if (status === 403) {
+          toast.error("You have reached the maximum attempts for this course.");
+        } else if (status === 400) {
+          toast.error("Invalid request. Please try again.");
+        } else {
+          toast.error(errorData.message || "Failed to check quiz attempts. Please try again later.");
+        }
+      } else if (error.request) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+
+      setLoadingCourse(null);
+    }
   };
 
-  // Calculate card dimensions based on screen size
   const getCardWidth = () => {
     if (isMobile) return "100%";
     if (isTablet) return 280;
@@ -86,6 +142,7 @@ const CourseSelection = () => {
             IzyQuiz Lite
           </Typography>
         </Box>
+
         <Typography
           variant="h3"
           align="center"
@@ -96,7 +153,7 @@ const CourseSelection = () => {
         </Typography>
       </Container>
 
-      {/* Main content */}
+      {/* Courses */}
       <Container sx={{ flex: 1 }}>
         <Box
           display="flex"
@@ -132,6 +189,7 @@ const CourseSelection = () => {
                     {course.id}
                   </Typography>
                 </Box>
+
                 <Typography
                   variant="subtitle1"
                   sx={{
@@ -147,10 +205,8 @@ const CourseSelection = () => {
                 >
                   {course.name}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 0.5, lineHeight: "30px" }}
-                >
+
+                <Typography variant="body2" sx={{ mb: 0.5, lineHeight: "30px" }}>
                   <strong>Questions:</strong> {course.questions}
                 </Typography>
                 <Typography variant="body2">
@@ -166,7 +222,7 @@ const CourseSelection = () => {
                   onClick={() => handleSelectCourse(course.id)}
                   disabled={!!loadingCourse}
                 >
-                  {loadingCourse === course.id ? "Loading..." : "Start Quiz"}
+                  {loadingCourse === course.id ? "Checking..." : "Start Quiz"}
                 </Button>
               </CardActions>
 
@@ -205,8 +261,7 @@ const CourseSelection = () => {
         }}
       >
         <Typography variant="body2">
-          © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights
-          reserved.
+          © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights reserved.
         </Typography>
       </Box>
     </Box>
