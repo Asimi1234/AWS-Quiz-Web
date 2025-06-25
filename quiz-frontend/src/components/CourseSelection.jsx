@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
 import {
   Container,
   Typography,
@@ -16,8 +15,10 @@ import {
   useTheme,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import LeaderboardModal from "../components/LeaderboardModal";
+import UserAvatar from "../components/UseAvater";
 
-// List of available courses
 const courses = [
   {
     id: "GST112",
@@ -37,74 +38,97 @@ const courses = [
     questions: 25,
     duration: "5 min",
   },
+  {
+    id: "CRS101",
+    name: "Introduction to Christian Religious Studies",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "MTH204",
+    name: "Calculus and Mathematical Analysis",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "LAW106",
+    name: "Introduction to Nigerian Law",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "ECON108",
+    name: "Principles of Economics",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "MCB103",
+    name: "General Microbiology I",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "PHY103",
+    name: "General Physics I",
+    questions: 25,
+    duration: "5 min",
+  },
 ];
 
-// API base URL — replace with your live API Gateway URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
 const CourseSelection = () => {
   const navigate = useNavigate();
   const [loadingCourse, setLoadingCourse] = useState(null);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
   const theme = useTheme();
 
-  // Responsive breakpoints
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  // Handle course selection and check attempts
-  // Handle course selection and check attempts
   const handleSelectCourse = async (courseId) => {
     setLoadingCourse(courseId);
     try {
       const userId = localStorage.getItem("userId") || "testUser";
+      const isAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
 
-      // Check attempts WITHOUT incrementing using the new check-attempts endpoint
       const response = await axios.get(
-        `${API_BASE_URL}/check-attempts?user_id=${encodeURIComponent(userId)}&course_id=${encodeURIComponent(courseId)}`,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        `${API_BASE_URL}/check-attempts?user_id=${encodeURIComponent(
+          userId
+        )}&course_id=${encodeURIComponent(courseId)}&is_admin=${isAdmin}`
       );
 
-      console.log("🔍 API Response:", response.data); // Debug log
-
-      // Check if user can attempt the quiz - fix the condition
       if (response.data.success && response.data.remaining_attempts > 0) {
-        const remainingAttempts = response.data.remaining_attempts;
-        toast.success(`Starting quiz! You have ${remainingAttempts} attempts remaining.`);
-
-        // Navigate to quiz page - attempts will be incremented when quiz is actually submitted
+        toast.success(
+          `Starting quiz! You have ${response.data.remaining_attempts} attempts remaining.`
+        );
         setTimeout(() => {
           navigate(`/quiz/${courseId}`);
         }, 1200);
       } else {
         navigate(`/quiz/${courseId}`);
       }
-
     } catch (error) {
       console.error("Error checking attempts:", error);
-
-      // Handle different error scenarios
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-
-        if (status === 403) {
-          toast.error("You have reached the maximum attempts for this course.");
-        } else if (status === 400) {
-          toast.error("Invalid request. Please try again.");
-        } else {
-          toast.error(errorData.message || "Failed to check quiz attempts. Please try again later.");
-        }
-      } else if (error.request) {
-        toast.error("Network error. Please check your connection and try again.");
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
-
+      toast.error("Failed to check quiz attempts. Please try again.");
       setLoadingCourse(null);
+    }
+  };
+
+  const handleLeaderboardOpen = async (courseId) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/leaderboard?course_id=${encodeURIComponent(courseId)}`
+      );
+      setLeaderboardData(response.data.leaderboard);
+      setSelectedCourseId(courseId);
+      setLeaderboardOpen(true);
+    } catch (err) {
+      console.error("Error fetching leaderboard:", err);
+      toast.error("Failed to load leaderboard.");
     }
   };
 
@@ -129,18 +153,31 @@ const CourseSelection = () => {
         color: "white",
       }}
     >
-      {/* Header */}
       <Container sx={{ py: 7 }}>
-        <Box display="flex" alignItems="center" justifyContent="center" mb={8}>
-          <Box
-            component="img"
-            src="https://res.cloudinary.com/dlytakuhd/image/upload/v1748332310/logo_z5esiq.png"
-            alt="Company Logo"
-            sx={{ height: 50, width: 50, mr: 2 }}
-          />
-          <Typography variant="h5" fontWeight="bold">
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={8}
+        >
+          <Box display="flex" alignItems="center">
+            <Box
+              component="img"
+              src="https://res.cloudinary.com/dlytakuhd/image/upload/v1748332310/logo_z5esiq.png"
+              alt="Company Logo"
+              sx={{ height: 50, width: 50, mr: 2 }}
+            />
+          </Box>
+
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{ fontSize: isMobile ? '1.6rem' : '2.4rem', textAlign: "center", flex: 1, ml: isMobile ? 0 : "-50px" }}
+          >
             IzyQuiz Lite
           </Typography>
+
+          <UserAvatar userId={localStorage.getItem("userId") || "testUser"} />
         </Box>
 
         <Typography
@@ -153,7 +190,6 @@ const CourseSelection = () => {
         </Typography>
       </Container>
 
-      {/* Courses */}
       <Container sx={{ flex: 1 }}>
         <Box
           display="flex"
@@ -168,7 +204,6 @@ const CourseSelection = () => {
               sx={{
                 width: getCardWidth(),
                 height: getCardHeight(),
-                maxWidth: 320,
                 borderRadius: 3,
                 backgroundColor: "#ffffffdd",
                 color: "#000",
@@ -214,7 +249,7 @@ const CourseSelection = () => {
                 </Typography>
               </CardContent>
 
-              <CardActions sx={{ p: 2, pt: 0 }}>
+              <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
                 <Button
                   fullWidth
                   variant="contained"
@@ -224,6 +259,17 @@ const CourseSelection = () => {
                 >
                   {loadingCourse === course.id ? "Checking..." : "Start Quiz"}
                 </Button>
+
+                <DashboardIcon
+                  onClick={() => handleLeaderboardOpen(course.id)}
+                  sx={{
+                    fontSize: 26,
+                    color: "#0f4c75",
+                    cursor: "pointer",
+                    ml: 1,
+                    "&:hover": { color: "#3282b8" },
+                  }}
+                />
               </CardActions>
 
               {loadingCourse === course.id && (
@@ -249,7 +295,13 @@ const CourseSelection = () => {
         </Box>
       </Container>
 
-      {/* Footer */}
+      <LeaderboardModal
+        open={leaderboardOpen}
+        onClose={() => setLeaderboardOpen(false)}
+        leaderboard={leaderboardData}
+        courseId={selectedCourseId}
+      />
+
       <Box
         component="footer"
         sx={{
@@ -261,7 +313,8 @@ const CourseSelection = () => {
         }}
       >
         <Typography variant="body2">
-          © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights reserved.
+          © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights
+          reserved.
         </Typography>
       </Box>
     </Box>

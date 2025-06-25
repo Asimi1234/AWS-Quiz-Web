@@ -108,6 +108,48 @@ Resources:
               Ref: QuizApi
     Metadata:
       SamResourceId: CheckAttemptsFunction
+  SubmitQuizFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: SubmitQuizFunction
+      Handler: app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: QuizAttempts
+      Environment:
+        Variables:
+          QUIZ_ATTEMPTS_TABLE: QuizAttempts
+      Events:
+        SubmitQuizAPI:
+          Type: Api
+          Properties:
+            Path: /submit-quiz
+            Method: post
+            RestApiId:
+              Ref: QuizApi
+    Metadata:
+      SamResourceId: SubmitQuizFunction
+  LeaderboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: LeaderboardFunction
+      Handler: app.lambda_handler
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: QuizAttempts
+      Environment:
+        Variables:
+          QUIZ_ATTEMPTS_TABLE: QuizAttempts
+      Events:
+        LeaderboardAPI:
+          Type: Api
+          Properties:
+            Path: /leaderboard
+            Method: get
+            RestApiId:
+              Ref: QuizApi
+    Metadata:
+      SamResourceId: LeaderboardFunction
 Outputs:
   QuizApiUrl:
     Description: API Gateway endpoint URL for Quiz API

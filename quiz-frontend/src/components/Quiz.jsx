@@ -79,6 +79,17 @@ const Quiz = () => {
       setCompleted(true);
 
       const userId = localStorage.getItem("userId") || "testUser";
+
+      await fetch(`${API_BASE}/submit-quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          course_id: courseId,
+          score: finalScore,
+        }),
+      });
+
       const attemptRes = await fetch(`${API_BASE}/user/attempts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

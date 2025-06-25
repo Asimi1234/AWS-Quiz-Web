@@ -45,4 +45,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["CheckAttemptsFunction"]
 
+[function_build_definitions.c592635f-864f-4d13-8fca-915ed62a6367]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\submit_quiz"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["SubmitQuizFunction"]
+
+[function_build_definitions.c2263be6-6f52-4f02-8409-36775188cbf9]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\leaderboard"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["LeaderboardFunction"]
+
 [layer_build_definitions]
