@@ -39,6 +39,18 @@ const courses = [
     duration: "5 min",
   },
   {
+    id: "PHY003",
+    name: "Magnetism and Electromagnetism",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
+    id: "PHY004",
+    name: "Nuclear Physics and Radioactivity",
+    questions: 25,
+    duration: "5 min",
+  },
+  {
     id: "CRS101",
     name: "Introduction to Christian Religious Studies",
     questions: 25,
