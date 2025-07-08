@@ -13,11 +13,15 @@ import {
   CircularProgress,
   useMediaQuery,
   useTheme,
+  IconButton,
+  Stack,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LeaderboardModal from "../components/LeaderboardModal";
 import UserAvatar from "../components/UseAvater";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import GitHubIcon from "@mui/icons-material/GitHub";
 
 const courses = [
   {
@@ -184,7 +188,12 @@ const CourseSelection = () => {
           <Typography
             variant="h5"
             fontWeight="bold"
-            sx={{ fontSize: isMobile ? '1.6rem' : '2.4rem', textAlign: "center", flex: 1, ml: isMobile ? 0 : "-50px" }}
+            sx={{
+              fontSize: isMobile ? "1.6rem" : "2.4rem",
+              textAlign: "center",
+              flex: 1,
+              ml: isMobile ? 0 : "-50px",
+            }}
           >
             IzyQuiz Lite
           </Typography>
@@ -253,7 +262,10 @@ const CourseSelection = () => {
                   {course.name}
                 </Typography>
 
-                <Typography variant="body2" sx={{ mb: 0.5, lineHeight: "30px" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ mb: 0.5, lineHeight: "30px" }}
+                >
                   <strong>Questions:</strong> {course.questions}
                 </Typography>
                 <Typography variant="body2">
@@ -324,10 +336,40 @@ const CourseSelection = () => {
           opacity: 0.5,
         }}
       >
-        <Typography variant="body2">
-          © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights
-          reserved.
-        </Typography>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="center"
+          alignItems="center"
+          spacing={1}
+        >
+          {/* Icon buttons group */}
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              aria-label="LinkedIn profile"
+              href="https://linkedin.com/in/asimiisrael"
+              target="_blank"
+              rel="noopener"
+              sx={{ color: "#ccc" }}
+            >
+              <LinkedInIcon />
+            </IconButton>
+            <IconButton
+              aria-label="GitHub profile"
+              href="https://github.com/Asimi1234"
+              target="_blank"
+              rel="noopener"
+              sx={{ color: "#ccc" }}
+            >
+              <GitHubIcon />
+            </IconButton>
+          </Stack>
+
+          {/* Footer text */}
+          <Typography variant="body2">
+            © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights
+            reserved.
+          </Typography>
+        </Stack>
       </Box>
     </Box>
   );
