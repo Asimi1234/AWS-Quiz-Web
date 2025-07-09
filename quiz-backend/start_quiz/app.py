@@ -1,6 +1,8 @@
 
 import json
 import random
+import jwt
+import os
 
 QUESTION_BANK = {
     "GST112" : [
@@ -589,9 +591,18 @@ QUESTION_BANK = {
   ]
 
 }
+SECRET_KEY = os.environ['SECRET_KEY']
+def verify_token(token):
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return {"error": "Token expired"}
+    except jwt.InvalidTokenError:
+        return {"error": "Invalid token"}
 
 def lambda_handler(event, context):
-    # Enable CORS for preflight requests
+    # CORS preflight
     if event.get('httpMethod') == 'OPTIONS':
         return {
             "statusCode": 200,
@@ -602,21 +613,42 @@ def lambda_handler(event, context):
             },
             "body": ""
         }
-    
+
     try:
-        # Debug logging
+        # Debug log event
         print(f"Event: {json.dumps(event)}")
-        
+
+        # === Token verification ===
+        auth_header = event['headers'].get('Authorization')
+        if not auth_header:
+            return {
+                "statusCode": 401,
+                "headers": cors_headers(),
+                "body": json.dumps({"error": "Missing token"})
+            }
+
+        token = auth_header.split(" ")[1]
+        verification_result = verify_token(token)
+
+        if "error" in verification_result:
+            return {
+                "statusCode": 401,
+                "headers": cors_headers(),
+                "body": json.dumps({"error": verification_result["error"]})
+            }
+
+        user_id = verification_result["userId"]
+        print(f"Verified user: {user_id}")
+
+        # === Course ID extraction ===
         course_id = None
-        
-        # Check query string parameters first (for GET requests)
+
         if event.get("queryStringParameters") and event["queryStringParameters"]:
             course_id_raw = event["queryStringParameters"].get("courseId")
             if course_id_raw:
                 course_id = course_id_raw.upper()
                 print(f"Course ID from query params: {course_id}")
-        
-        # Check request body (for POST requests)
+
         if not course_id and event.get("body"):
             try:
                 body = json.loads(event["body"])
@@ -628,25 +660,14 @@ def lambda_handler(event, context):
                 print(f"JSON decode error: {e}")
                 return {
                     "statusCode": 400,
-                    "headers": {
-                        "Content-Type": "application/json",
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                        "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-                    },
+                    "headers": cors_headers(),
                     "body": json.dumps({"error": "Invalid JSON in request body"})
                 }
 
-        # Validate course ID
         if not course_id:
             return {
                 "statusCode": 400,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-                },
+                "headers": cors_headers(),
                 "body": json.dumps({
                     "error": "Missing courseId parameter",
                     "availableCourses": list(QUESTION_BANK.keys())
@@ -656,35 +677,23 @@ def lambda_handler(event, context):
         if course_id not in QUESTION_BANK:
             return {
                 "statusCode": 400,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-                },
+                "headers": cors_headers(),
                 "body": json.dumps({
                     "error": f"Invalid courseId: {course_id}",
                     "availableCourses": list(QUESTION_BANK.keys())
                 })
             }
 
-        # Get questions for the course
+        # === Get and select random questions ===
         questions = QUESTION_BANK[course_id]
-        
-        # Select random questions (up to 25)
         num_questions = min(25, len(questions))
         selected_questions = random.sample(questions, num_questions)
-        
+
         print(f"Selected {len(selected_questions)} questions for course {course_id}")
 
         return {
             "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-            },
+            "headers": cors_headers(),
             "body": json.dumps({
                 "success": True,
                 "courseId": course_id,
@@ -697,14 +706,17 @@ def lambda_handler(event, context):
         print(f"Error: {str(e)}")
         return {
             "statusCode": 500,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-                "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
-            },
+            "headers": cors_headers(),
             "body": json.dumps({
                 "error": "Internal server error",
                 "message": str(e)
             })
         }
+
+def cors_headers():
+    return {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+    }

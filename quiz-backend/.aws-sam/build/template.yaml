@@ -150,6 +150,27 @@ Resources:
               Ref: QuizApi
     Metadata:
       SamResourceId: LeaderboardFunction
+  UserLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: UserLoginFunction
+      Handler: app.lambda_handler
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: QuizAttempts
+      Environment:
+        Variables:
+          SECRET_KEY: ''
+      Events:
+        UserLoginAPI:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: post
+            RestApiId:
+              Ref: QuizApi
+    Metadata:
+      SamResourceId: UserLoginFunction
 Outputs:
   QuizApiUrl:
     Description: API Gateway endpoint URL for Quiz API

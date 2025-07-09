@@ -10,6 +10,14 @@ import AdminDialog from "./AdminDialog";
 const API_BASE = process.env.REACT_APP_API_BASE;
 const secretCode = process.env.REACT_APP_CODE;
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+};
+
 const Quiz = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -31,24 +39,24 @@ const Quiz = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [resumeChecked, setResumeChecked] = useState(false);
 
-  const shuffleQuestions = (questions) => {
-    const shuffled = questions.map((q) => ({
-      ...q,
-      options: q.options.sort(() => 0.5 - Math.random()),
-    }));
-    return shuffled.sort(() => 0.5 - Math.random());
-  };
+  const shuffleQuestions = (questions) =>
+    questions
+      .map((q) => ({
+        ...q,
+        options: q.options.sort(() => 0.5 - Math.random()),
+      }))
+      .sort(() => 0.5 - Math.random());
 
   const fetchQuestions = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${API_BASE}/start-quiz?courseId=${courseId}`
-      );
-      const data = await response.json();
+      const res = await fetch(`${API_BASE}/start-quiz?courseId=${courseId}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
       setQuestions(shuffleQuestions(data.questions));
       setLoading(false);
-    } catch (error) {
-      console.error("Failed to fetch questions", error);
+    } catch (err) {
+      console.error("Failed to fetch questions", err);
       setLoading(false);
     }
   }, [courseId]);
@@ -59,10 +67,10 @@ const Quiz = () => {
 
   const handleFinalSubmit = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${API_BASE}/get-answer?courseId=${courseId}`
-      );
-      const data = await response.json();
+      const res = await fetch(`${API_BASE}/get-answer?courseId=${courseId}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
       const corrects = data.correct_answers;
       setCorrectAnswers(corrects);
 
@@ -83,7 +91,7 @@ const Quiz = () => {
 
       await fetch(`${API_BASE}/submit-quiz`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           user_id: userId,
           course_id: courseId,
@@ -93,7 +101,7 @@ const Quiz = () => {
 
       const attemptRes = await fetch(`${API_BASE}/user/attempts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           user_id: userId,
           course_id: courseId,
@@ -101,20 +109,17 @@ const Quiz = () => {
         }),
       });
       const attemptData = await attemptRes.json();
-      console.log("✅ Attempt recorded:", attemptData);
-
       setRemainingAttempts(attemptData.remaining_attempts);
 
-      if (attemptData.remaining_attempts <= 0 && !isAdmin) {
+      if (attemptData.remaining_attempts <= 0 && !isAdmin)
         setAdminDialogOpen(true);
-      }
 
       localStorage.removeItem(progressKey);
     } catch (err) {
       console.error("Error submitting quiz or recording attempt:", err);
       alert("Error submitting quiz.");
     }
-  }, [answers, courseId, progressKey, isAdmin, navigate]);
+  }, [answers, courseId, isAdmin, navigate, progressKey]);
 
   const handleAdminSubmit = async () => {
     if (adminInput === secretCode) {
@@ -135,16 +140,14 @@ const Quiz = () => {
       if (!userId) return navigate("/login");
 
       try {
-        const response = await fetch(
-          `${API_BASE}/check-attempts?user_id=${userId}&course_id=${courseId}&is_admin=true`
+        const res = await fetch(
+          `${API_BASE}/check-attempts?course_id=${courseId}&is_admin=true`,
+          { headers: getAuthHeaders() }
         );
-        const data = await response.json();
+        const data = await res.json();
         setRemainingAttempts(data.remaining_attempts);
-      } catch (error) {
-        console.error(
-          "Failed to check admin attempts after code entry:",
-          error
-        );
+      } catch (err) {
+        console.error("Failed to check admin attempts:", err);
         alert("Failed to update admin attempts.");
       }
     } else {
@@ -168,10 +171,12 @@ const Quiz = () => {
       if (!userId) return navigate("/login");
 
       try {
-        const response = await fetch(
-          `${API_BASE}/check-attempts?user_id=${userId}&course_id=${courseId}&is_admin=${savedAdmin}`
+        // Call check-attempts without user_id — token will handle identity
+        const res = await fetch(
+          `${API_BASE}/check-attempts?course_id=${courseId}&is_admin=${savedAdmin}`,
+          { headers: getAuthHeaders() }
         );
-        const data = await response.json();
+        const data = await res.json();
 
         if (data.success) {
           setRemainingAttempts(data.remaining_attempts);
@@ -188,6 +193,7 @@ const Quiz = () => {
               "You have a saved quiz in progress. Resume?"
             );
             setResumeChecked(true);
+
             if (resume) {
               const parsed = JSON.parse(savedProgress);
               setQuestions(parsed.questions || []);
@@ -201,6 +207,7 @@ const Quiz = () => {
             }
           }
 
+          // No resume — fetch fresh questions
           fetchQuestions();
         } else {
           console.error("API error:", data.message);
@@ -257,7 +264,6 @@ const Quiz = () => {
         <CircularProgress />
       </Box>
     );
-
   if (completed)
     return (
       <ResultCard
@@ -281,7 +287,6 @@ const Quiz = () => {
           totalQuestions={questions.length}
           courseId={courseId}
         />
-
         <QuestionCard
           question={questions[current]}
           questionIndex={current}
@@ -297,7 +302,6 @@ const Quiz = () => {
           current={current}
           setCurrent={setCurrent}
         />
-
         <AdminDialog
           open={adminDialogOpen}
           onClose={() => setAdminDialogOpen(false)}
@@ -307,7 +311,6 @@ const Quiz = () => {
           adminError={adminError}
           navigate={navigate}
         />
-
         <ConfirmDialog
           open={confirmDialogOpen}
           onClose={handleCancelSubmit}

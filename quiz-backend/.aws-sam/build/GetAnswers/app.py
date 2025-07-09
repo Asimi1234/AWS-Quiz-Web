@@ -1,4 +1,6 @@
 import json
+import jwt
+import os
 
 ANSWER_BANK = {
 "GST112" : {
@@ -465,10 +467,21 @@ def normalize(text):
         return ""
     return " ".join(str(text).strip().split())
 
+# JWT secret key
+SECRET_KEY = os.environ['SECRET_KEY']
+
+def verify_token(token):
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return {"error": "Token expired"}
+    except jwt.InvalidTokenError:
+        return {"error": "Invalid token"}
+
 def lambda_handler(event, context):
     print("Received event:", json.dumps(event))
     
-    # CORS headers
     cors_headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -476,7 +489,6 @@ def lambda_handler(event, context):
         "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
     }
     
-    # Handle CORS preflight
     if event.get("httpMethod") == "OPTIONS":
         return {
             "statusCode": 200,
@@ -485,22 +497,37 @@ def lambda_handler(event, context):
         }
     
     try:
+        # === Verify JWT token ===
+        auth_header = event['headers'].get('Authorization')
+        if not auth_header:
+            return {
+                "statusCode": 401,
+                "headers": cors_headers,
+                "body": json.dumps({"error": "Missing token"})
+            }
+
+        token = auth_header.split(" ")[1]
+        verification_result = verify_token(token)
+
+        if "error" in verification_result:
+            return {
+                "statusCode": 401,
+                "headers": cors_headers,
+                "body": json.dumps({"error": verification_result["error"]})
+            }
+
         # Extract courseId from query parameters or body
         course_id = None
-        
-        # Try query parameters first (GET request)
+
         if event.get("queryStringParameters"):
             course_id = event["queryStringParameters"].get("courseId")
-        
-        # Try body if no query parameters (POST request)
         if not course_id and event.get("body"):
             try:
                 body = json.loads(event["body"])
                 course_id = body.get("courseId")
             except json.JSONDecodeError:
                 pass
-        
-        # Validate courseId
+
         if not course_id:
             return {
                 "statusCode": 400,
@@ -510,7 +537,7 @@ def lambda_handler(event, context):
                     "error": "Missing courseId parameter"
                 })
             }
-        
+
         if course_id not in ANSWER_BANK:
             return {
                 "statusCode": 400,
@@ -520,11 +547,10 @@ def lambda_handler(event, context):
                     "error": f"Course '{course_id}' not found in answer bank"
                 })
             }
-        
-        # Get and normalize correct answers
+
         correct_answers = ANSWER_BANK[course_id]
         normalized_correct_answers = {k: normalize(v) for k, v in correct_answers.items()}
-        
+
         return {
             "statusCode": 200,
             "headers": cors_headers,

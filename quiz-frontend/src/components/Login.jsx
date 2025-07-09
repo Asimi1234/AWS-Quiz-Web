@@ -12,23 +12,43 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+const API_BASE = process.env.REACT_APP_API_BASE;
+
 const LoginPage = () => {
   const [userId, setUserId] = useState("");
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const handleLogin = (e) => {
-  e.preventDefault();
-  if (!userId.trim()) {
-    toast.error("Please enter your User ID.");
-    return;
-  }
-  localStorage.setItem("userId", userId.trim());
-  toast.success("Logged in successfully!");
-  navigate("/courses");  // corrected path
-};
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
+    if (!userId.trim()) {
+      toast.error("Please enter your User ID.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userId.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        toast.success("Logged in successfully!");
+        navigate("/courses");
+      } else {
+        toast.error(data.message || "Login failed.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("An error occurred during login.");
+    }
+  };
 
   return (
     <Box

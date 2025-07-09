@@ -1,109 +1,96 @@
 import json
-import boto3
-from boto3.dynamodb.conditions import Key
-from botocore.exceptions import ClientError
-from decimal import Decimal
+import os
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 
-# Initialize DynamoDB resource
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('QuizAttempts')
+# Load secret key from environment
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise Exception("SECRET_KEY environment variable not set")
 
-MAX_FREE_ATTEMPTS = 5
-MAX_ADMIN_ATTEMPTS = 60
-
-def lambda_handler(event, context):
-    print("Received event:", json.dumps(event, default=str))
-
-    cors_headers = {
+# CORS headers for all responses
+def cors_headers():
+    return {
+        "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT"
+        "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
     }
 
-    method = event.get("httpMethod")
-
-    if method == "OPTIONS":
-        return {"statusCode": 200, "headers": cors_headers, "body": json.dumps({"message": "CORS preflight passed"})}
-
+# JWT token verification
+def verify_token(token):
     try:
-        # Determine request params/body values
-        if method in ["POST", "PUT"]:
-            body = json.loads(event.get('body', '{}'))
-            user_id = body.get('user_id')
-            course_id = body.get('course_id')
-            is_admin = body.get('is_admin', False)
-        else:
-            query_params = event.get('queryStringParameters') or {}
-            user_id = query_params.get('user_id')
-            course_id = query_params.get('course_id')
-            is_admin = query_params.get('is_admin', 'false').lower() == 'true'
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded
+    except ExpiredSignatureError:
+        return {"error": "Token expired"}
+    except InvalidTokenError:
+        return {"error": "Invalid token"}
 
-        if not user_id or not course_id:
-            return {
-                "statusCode": 400,
-                "headers": cors_headers,
-                "body": json.dumps({'success': False, 'message': 'Missing user_id or course_id'})
-            }
-
-        response = table.get_item(Key={'user_id': user_id, 'course_id': course_id})
-        item = response.get('Item', {})
-
-        attempts_field = "admin_attempts" if is_admin else "free_attempts"
-        max_attempts = MAX_ADMIN_ATTEMPTS if is_admin else MAX_FREE_ATTEMPTS
-
-        current_attempts = item.get(attempts_field, 0)
-        current_attempts = int(current_attempts) if isinstance(current_attempts, Decimal) else current_attempts
-        remaining_attempts = max(0, max_attempts - current_attempts)
-
-        if method == "POST":
-            # Increment attempt count
-            new_attempts = current_attempts + 1
-
-            table.update_item(
-                Key={'user_id': user_id, 'course_id': course_id},
-                UpdateExpression=f"SET {attempts_field} = :val",
-                ExpressionAttributeValues={':val': new_attempts}
-            )
-
-            remaining_attempts = max(0, max_attempts - new_attempts)
-
+# Main Lambda handler
+def lambda_handler(event, context):
+    try:
+        # Handle CORS preflight request
+        if event.get('httpMethod') == 'OPTIONS':
             return {
                 "statusCode": 200,
-                "headers": cors_headers,
-                "body": json.dumps({
-                    'success': True,
-                    'current_attempts': new_attempts,
-                    'remaining_attempts': remaining_attempts,
-                    'max_attempts': max_attempts,
-                    'message': 'Attempt recorded successfully'
-                })
+                "headers": cors_headers(),
+                "body": json.dumps({"message": "Preflight OK"})
             }
 
-        elif method == "GET":
-            # Return current attempts info
-            return {
-                "statusCode": 200,
-                "headers": cors_headers,
-                "body": json.dumps({
-                    'success': True,
-                    'current_attempts': current_attempts,
-                    'remaining_attempts': remaining_attempts,
-                    'max_attempts': max_attempts,
-                    'can_attempt': remaining_attempts > 0
-                })
-            }
+        # Check Authorization header
+        headers = event.get('headers', {})
+        token = headers.get('Authorization', '').replace('Bearer ', '')
 
-        else:
-            return {
-                "statusCode": 405,
-                "headers": cors_headers,
-                "body": json.dumps({'success': False, 'message': f'Method {method} not allowed'})
-            }
+        if not token:
+            return generate_response(401, {"message": "Missing Authorization token"})
 
-    except ClientError as e:
-        print(f"DynamoDB Error: {str(e)}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'success': False, 'message': str(e)})}
+        # Verify JWT token
+        verification_result = verify_token(token)
+        if 'error' in verification_result:
+            return generate_response(401, {"message": verification_result["error"]})
+
+        user_id = verification_result.get("userId")
+
+        # Check query parameters
+        params = event.get('queryStringParameters') or {}
+        is_admin = params.get("is_admin", "false").lower() == "true"
+        if is_admin:
+            user_id = params.get("user_id", user_id)
+
+        if not user_id:
+            return generate_response(400, {"message": "User ID not provided"})
+
+        course_id = params.get("course_id")
+        if not course_id:
+            return generate_response(400, {"message": "Missing course_id query parameter"})
+
+        # Simulated lookup logic (replace this with your DynamoDB or database logic)
+        max_attempts = 5
+        current_attempts = 0  # fetch actual attempts from database here
+        remaining_attempts = max_attempts - current_attempts
+        can_attempt = remaining_attempts > 0
+
+        result = {
+            "success": True,
+            "user_id": user_id,
+            "course_id": course_id,
+            "current_attempts": current_attempts,
+            "remaining_attempts": remaining_attempts,
+            "max_attempts": max_attempts,
+            "can_attempt": can_attempt
+        }
+
+        return generate_response(200, result)
 
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'success': False, 'message': str(e)})}
+        print("Unhandled error:", str(e))
+        return generate_response(500, {"message": "Internal server error", "error": str(e)})
+
+# Consistent API response format with CORS headers
+def generate_response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": cors_headers(),
+        "body": json.dumps(body)
+    }

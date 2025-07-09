@@ -138,6 +138,25 @@ Resources:
             Path: /leaderboard
             Method: get
             RestApiId: !Ref QuizApi
+  UserLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: user_login/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: QuizAttempts
+      Environment:
+        Variables:
+          SECRET_KEY: ""
+      Events:
+        UserLoginAPI:
+          Type: Api
+          Properties:
+            Path: /login
+            Method: post
+            RestApiId: !Ref QuizApi
+
 
 Outputs:
   QuizApiUrl:
@@ -151,3 +170,4 @@ Outputs:
     Value: QuizAttempts
     Export:
       Name: !Sub "${AWS::StackName}-QuizAttemptsTableName"
+
