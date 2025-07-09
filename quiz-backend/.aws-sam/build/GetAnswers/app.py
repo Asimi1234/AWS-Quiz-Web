@@ -435,7 +435,7 @@ ANSWER_BANK = {
     "q3": "1.6×10⁻¹⁵ N",
     "q4": "X=4×10⁻⁶ T, Y=6×10⁻⁷ N",
     "q5": "1.92×10⁻¹⁰ N",
-    "q6": "qV×B",
+    "q6": "F=qV×B",
     "q7": "Moving perpendicular",
     "q8": "The angle of dip is the angle which a freely suspended magnet makes with the vertical",
     "q9": "Electromagnetic induction",
@@ -463,7 +463,7 @@ def normalize(text):
     """Normalize text for comparison"""
     if not text:
         return ""
-    return " ".join(str(text).strip().lower().split())
+    return " ".join(str(text).strip().split())
 
 def lambda_handler(event, context):
     print("Received event:", json.dumps(event))
