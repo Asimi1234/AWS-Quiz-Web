@@ -23,10 +23,10 @@ const LeaderboardModal = ({ open, onClose, leaderboard, courseId }) => {
             {leaderboard.map((user, index) => (
               <ListItem key={user.user_id}>
                 <ListItemAvatar>
-                  <UserAvatar userId={user.user_id} />
+                  <UserAvatar username={user.username} />
                 </ListItemAvatar>
                 <ListItemText
-                  primary={`${index + 1}. ${user.user_id}`}
+                  primary={`${index + 1}. ${user.username}`}
                   secondary={`Score: ${user.score}`}
                 />
               </ListItem>

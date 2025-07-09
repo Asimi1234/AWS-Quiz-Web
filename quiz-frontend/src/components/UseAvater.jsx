@@ -1,32 +1,33 @@
 import React, { useState } from "react";
 import { Avatar, Box, Snackbar } from "@mui/material";
 
-// Generate a color from string hash
+// Helper: Get hashed index from string for any array
+const getHashedIndex = (str, array) => {
+  const safeStr = str || "user"; // fallback if null/undefined
+  let hash = 0;
+  for (let i = 0; i < safeStr.length; i++) {
+    hash = safeStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % array.length;
+  return index;
+};
+
+// Generate a color based on username hash
 const getColor = (str) => {
   const colors = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#009688", "#4caf50"];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
+  return colors[getHashedIndex(str, colors)];
 };
 
-// Pick a random emoji based on hash
+// Pick a random emoji based on username hash
 const getEmoji = (str) => {
   const emojis = ["🎉", "🔥", "⚡️", "✨", "💥", "🦄", "🚀", "💎"];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % emojis.length;
-  return emojis[index];
+  return emojis[getHashedIndex(str, emojis)];
 };
 
-const UserAvatar = ({ userId }) => {
+const UserAvatar = ({ username }) => {
   const [open, setOpen] = useState(false);
-  const color = getColor(userId);
-  const emoji = getEmoji(userId);
+  const color = getColor(username);
+  const emoji = getEmoji(username);
 
   const handleClick = () => {
     setOpen(true);
@@ -58,7 +59,7 @@ const UserAvatar = ({ userId }) => {
         open={open}
         onClose={() => setOpen(false)}
         autoHideDuration={4000}
-        message={`Your User ID: ${userId}`}
+        message={`Username: ${username || "Anonymous"}`}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       />
     </Box>

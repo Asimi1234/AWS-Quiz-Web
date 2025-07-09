@@ -222,7 +222,7 @@ const CourseSelection = () => {
           </Typography>
 
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <UserAvatar userId={localStorage.getItem("userId")} />
+            <UserAvatar username={localStorage.getItem("username")} />
             <IconButton
               aria-label="Logout"
               onClick={handleLogout}

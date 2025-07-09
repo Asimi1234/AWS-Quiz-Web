@@ -72,4 +72,31 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["UserLoginFunction"]
 
+[function_build_definitions.c1c2e3ac-5e72-44df-99bd-9707700dd1c6]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\user_signup"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["UserSignupFunction"]
+
+[function_build_definitions.7f20ad66-0e98-4ba7-b645-dbbf5a2b0e87]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\request_password_reset"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["RequestPasswordResetFunction"]
+
+[function_build_definitions.6b7a690d-375b-44de-bbf9-33d7fa65d346]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\reset_password"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["ResetPasswordFunction"]
+
 [layer_build_definitions]
