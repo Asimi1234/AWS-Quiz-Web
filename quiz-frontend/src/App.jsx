@@ -1,36 +1,58 @@
-import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-import CourseSelection from './components/CourseSelection';
-import Quiz from './components/Quiz';
+import LoginPage from "./components/Login";
+import CourseSelection from "./components/CourseSelection";
+import Quiz from "./components/Quiz";
+
+// Route guard component
+const RequireAuth = ({ children }) => {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 const App = () => {
-  useEffect(() => {
-    if (!localStorage.getItem("userId")) {
-      const newId = "user_" + Date.now();
-      localStorage.setItem("userId", newId);
-    }
-  }, []);
   return (
     <Router>
       <Routes>
-        {/* Default route: redirect to /select-course */}
-        <Route path="/" element={<Navigate to="/select-course" />} />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* Course selection page */}
-        <Route path="/select-course" element={<CourseSelection />} />
+        {/* Login page */}
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Quiz page with courseId param */}
-        <Route path="/quiz/:courseId" element={<Quiz />} />
+        {/* Protected CourseSelection */}
+        <Route
+          path="/courses"
+          element={
+            <RequireAuth>
+              <CourseSelection />
+            </RequireAuth>
+          }
+        />
+
+        {/* Protected Quiz */}
+        <Route
+          path="/quiz/:courseId"
+          element={
+            <RequireAuth>
+              <Quiz />
+            </RequireAuth>
+          }
+        />
+
+        {/* Catch-all: redirect unknown routes to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
 
-      {/* Toast notifications container */}
       <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
     </Router>
   );
 };
 
 export default App;
-

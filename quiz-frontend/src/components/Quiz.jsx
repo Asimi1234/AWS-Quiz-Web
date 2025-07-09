@@ -78,7 +78,8 @@ const Quiz = () => {
       setScore(finalScore);
       setCompleted(true);
 
-      const userId = localStorage.getItem("userId") || "testUser";
+      const userId = localStorage.getItem("userId");
+      if (!userId) return navigate("/login");
 
       await fetch(`${API_BASE}/submit-quiz`, {
         method: "POST",
@@ -113,7 +114,7 @@ const Quiz = () => {
       console.error("Error submitting quiz or recording attempt:", err);
       alert("Error submitting quiz.");
     }
-  }, [answers, courseId, progressKey, isAdmin]);
+  }, [answers, courseId, progressKey, isAdmin, navigate]);
 
   const handleAdminSubmit = async () => {
     if (adminInput === secretCode) {
@@ -130,7 +131,9 @@ const Quiz = () => {
       setLoading(true);
       fetchQuestions();
 
-      const userId = localStorage.getItem("userId") || "testUser";
+      const userId = localStorage.getItem("userId");
+      if (!userId) return navigate("/login");
+
       try {
         const response = await fetch(
           `${API_BASE}/check-attempts?user_id=${userId}&course_id=${courseId}&is_admin=true`
@@ -161,7 +164,9 @@ const Quiz = () => {
       const savedAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
       setIsAdmin(savedAdmin);
 
-      const userId = localStorage.getItem("userId") || "testUser";
+      const userId = localStorage.getItem("userId");
+      if (!userId) return navigate("/login");
+
       try {
         const response = await fetch(
           `${API_BASE}/check-attempts?user_id=${userId}&course_id=${courseId}&is_admin=${savedAdmin}`
@@ -210,7 +215,7 @@ const Quiz = () => {
     };
 
     checkAttempts();
-  }, [courseId, fetchQuestions, progressKey, resumeChecked]);
+  }, [courseId, fetchQuestions, progressKey, resumeChecked, navigate]);
 
   useEffect(() => {
     if (!loading && !completed) {

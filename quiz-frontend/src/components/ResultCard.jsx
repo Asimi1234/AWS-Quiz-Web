@@ -45,7 +45,7 @@ const ResultCard = ({
           variant="contained"
           onClick={() => {
             localStorage.removeItem(progressKey);
-            navigate("/");
+            navigate("/courses");
           }}
           sx={{ px: 4, py: 1, backgroundColor: "#0F4C75" }}
         >
