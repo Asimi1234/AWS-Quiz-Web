@@ -34,7 +34,7 @@ def lambda_handler(event, context):
                 "headers": cors_headers,
                 "body": json.dumps({"message": "Missing username, email, or password"})
             }
-
+        email = email.lower() 
         # Check for existing username via GSI
         response = users_table.query(
             IndexName='username-index',

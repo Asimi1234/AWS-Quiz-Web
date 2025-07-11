@@ -10,7 +10,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -20,8 +20,8 @@ const ResetPasswordPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Get token from query param when component mounts
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const urlToken = searchParams.get("token");
@@ -52,6 +52,9 @@ const ResetPasswordPage = () => {
 
       if (response.ok) {
         toast.success("Password reset successfully!");
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
       } else {
         toast.error(data.message || "Failed to reset password.");
       }
@@ -64,16 +67,48 @@ const ResetPasswordPage = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
+        height: "100svh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "white",
+        background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
         p: 2,
       }}
     >
       <Container maxWidth="xs">
+        {/* Logo and App Name */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={4}
+        >
+          <Box display="flex" alignItems="center">
+            <Box
+              component="img"
+              src="https://res.cloudinary.com/dlytakuhd/image/upload/v1748332310/logo_z5esiq.png"
+              alt="Company Logo"
+              sx={{ height: 50, width: 50, mr: 2 }}
+            />
+          </Box>
+
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{
+              fontSize: isMobile ? "1.6rem" : "2.2rem",
+              textAlign: "center",
+              flex: 1,
+              ml: isMobile ? 0 : "-50px",
+              color: "#FFFFFF",
+            }}
+          >
+            IzyQuiz Lite
+          </Typography>
+
+          <Box width={50} /> {/* Empty box to balance layout */}
+        </Box>
+
         <Paper
           elevation={5}
           sx={{
@@ -93,7 +128,6 @@ const ResetPasswordPage = () => {
           </Typography>
 
           <form onSubmit={handleResetPassword}>
-            {/* Show token field only if token isn’t from URL */}
             {!token && (
               <TextField
                 fullWidth

@@ -6,12 +6,11 @@ import {
   TextField,
   Button,
   Paper,
-  useTheme,
-  useMediaQuery,
   Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import BrandHeader from "./BrandHeader";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -19,8 +18,6 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -60,7 +57,7 @@ const LoginPage = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "100svh",
         background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
         display: "flex",
         alignItems: "center",
@@ -70,6 +67,9 @@ const LoginPage = () => {
       }}
     >
       <Container maxWidth="xs">
+        {/* Logo and App Name */}
+        <BrandHeader />
+
         <Paper
           elevation={5}
           sx={{
@@ -80,19 +80,10 @@ const LoginPage = () => {
           }}
         >
           <Typography
-            variant={isMobile ? "h4" : "h3"}
-            fontWeight="bold"
-            gutterBottom
-            align="center"
-          >
-            IzyQuiz Lite
-          </Typography>
-
-          <Typography
             variant="h6"
             align="center"
             gutterBottom
-            sx={{ color: "#0f4c75" }}
+            sx={{ color: "#0f4c75", fontWeight: "bold" }}
           >
             Login to Your Account
           </Typography>
@@ -141,7 +132,7 @@ const LoginPage = () => {
             </Typography>
 
             <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-              Don't have an account?{" "}
+              Don’t have an account?{" "}
               <Link
                 href="/signup"
                 underline="hover"

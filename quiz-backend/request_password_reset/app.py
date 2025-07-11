@@ -86,7 +86,7 @@ def lambda_handler(event, context):
                 "headers": cors_headers,
                 "body": json.dumps({"message": "Missing email"})
             }
-
+        email = email.lower() 
         # Query user by email using EmailIndex
         response = users_table.query(
             IndexName='EmailIndex',

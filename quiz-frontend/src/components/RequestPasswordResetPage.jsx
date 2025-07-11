@@ -10,13 +10,12 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { toast } from "react-toastify";
-import { Link as RouterLink } from "react-router-dom";
+import BrandHeader from "./BrandHeader";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
 const RequestPasswordResetPage = () => {
   const [email, setEmail] = useState("");
-  const [tokenSent, setTokenSent] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -40,7 +39,6 @@ const RequestPasswordResetPage = () => {
       if (response.ok) {
         toast.success("Reset link sent successfully!");
         window.alert("Reset token was successfully sent!");
-        setTokenSent(true); // 👈 enable the navigation link
       } else {
         toast.error(data.message || "Failed to request reset.");
       }
@@ -53,7 +51,7 @@ const RequestPasswordResetPage = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "100svh",
         background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
         display: "flex",
         alignItems: "center",
@@ -63,6 +61,9 @@ const RequestPasswordResetPage = () => {
       }}
     >
       <Container maxWidth="xs">
+        {/* Logo and App Name */}
+        <BrandHeader />
+
         <Paper
           elevation={5}
           sx={{
@@ -102,28 +103,6 @@ const RequestPasswordResetPage = () => {
               Send Reset Link
             </Button>
           </form>
-
-          {/* Show navigation link only when token has been sent */}
-          {tokenSent && (
-            <Box sx={{ mt: 3, textAlign: "center" }}>
-              <Typography variant="body2" gutterBottom>
-                Proceed to Reset Password:
-              </Typography>
-              <Button
-                component={RouterLink}
-                to="/reset-password"
-                variant="outlined"
-                sx={{
-                  mt: 1,
-                  borderColor: "#0f4c75",
-                  color: "#0f4c75",
-                  "&:hover": { backgroundColor: "#e3f2fd" },
-                }}
-              >
-                Go to Reset Password Page
-              </Button>
-            </Box>
-          )}
         </Paper>
       </Container>
     </Box>
@@ -131,3 +110,4 @@ const RequestPasswordResetPage = () => {
 };
 
 export default RequestPasswordResetPage;
+  

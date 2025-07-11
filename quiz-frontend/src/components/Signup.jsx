@@ -6,12 +6,11 @@ import {
   TextField,
   Button,
   Paper,
-  useTheme,
-  useMediaQuery,
   Link,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import BrandHeader from "./BrandHeader";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -19,8 +18,6 @@ const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
@@ -91,7 +88,7 @@ const SignupPage = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "100svh",
         background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
         display: "flex",
         alignItems: "center",
@@ -101,6 +98,10 @@ const SignupPage = () => {
       }}
     >
       <Container maxWidth="xs">
+        {/* Logo and App Name */}
+        <BrandHeader />
+
+        {/* Signup Form */}
         <Paper
           elevation={5}
           sx={{
@@ -111,10 +112,13 @@ const SignupPage = () => {
           }}
         >
           <Typography
-            variant={isMobile ? "h5" : "h4"}
-            fontWeight="bold"
-            gutterBottom
+            variant="h6"
             align="center"
+            gutterBottom
+            sx={{ 
+              color: "#0f4c75",
+              fontWeight: "bold"
+            }}
           >
             Create Your Account
           </Typography>
