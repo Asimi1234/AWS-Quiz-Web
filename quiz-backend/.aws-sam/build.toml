@@ -99,4 +99,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["ResetPasswordFunction"]
 
+[function_build_definitions.d7654ed5-f867-4040-9948-2e74e5e9ce82]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\check_user_exists"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["CheckUserExistsFunction"]
+
 [layer_build_definitions]

@@ -1,2 +1,0 @@
-pyjwt
-python-dotenv

@@ -581,7 +581,7 @@ QUESTION_BANK = {
     {"questionId":"q16","question":"A radioactive substance has a half-life of 20 hours. What fraction of the original radioactive nuclei will remain after 80 hours?","options":["1/32","1/16","1/8","1/4"]},
     {"questionId":"q17","question":"Which of the following is not a product of nuclear fission?","options":["Protons","Neutrons","Gamma rays","X-rays"]},
     {"questionId":"q18","question":"Which of the following is used for shielding radioactive fall-outs?","options":["Lead","Wood","Textile","Aluminum"]},
-    {"questionId":"q19","question":"A sheet of paper is placed in the path of a beam of radiations from a radioactive source. Which of the following radiations will pass through the paper?","options":["I only","II only","III only","II and III only"]},
+    {"questionId":"q19","question":"A sheet of paper is placed in the path of a beam of radiations from a radioactive source. Which of the following radiations will pass through the paper? (I. Alpha rays, II. Beta rays, III. Gamma rays)","options":["I only","II only","III only","II and III only"]},
     {"questionId":"q20","question":"--------- is a radioactive gas that decays by alpha emission to become polonium.","options":["Radon","Nucleus","Carbon","Proton"]},
     {"questionId":"q21","question":"The minimum energy to pull a nucleus apart into separate nucleons is known as the:","options":["Covalent energy","Binding energy","Nuclides energy","Isotopes"]},
     {"questionId":"q22","question":"A radioactive source emits Beta-Particles. It has an activity of 2.8×10⁷ Bq. Estimate the number of Beta particles emitted in a time interval of 2.0 minutes.","options":["3.36×10⁹","3.76×10⁹","4.36×10⁹","2.40×10⁹"]},

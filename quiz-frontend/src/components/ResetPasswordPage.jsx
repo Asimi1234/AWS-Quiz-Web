@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useLocation } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -18,6 +19,16 @@ const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const location = useLocation();
+
+  // Get token from query param when component mounts
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlToken = searchParams.get("token");
+    if (urlToken) {
+      setToken(urlToken);
+    }
+  }, [location]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -82,14 +93,17 @@ const ResetPasswordPage = () => {
           </Typography>
 
           <form onSubmit={handleResetPassword}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Reset Token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              sx={{ mb: 2 }}
-            />
+            {/* Show token field only if token isn’t from URL */}
+            {!token && (
+              <TextField
+                fullWidth
+                variant="outlined"
+                label="Reset Token"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            )}
             <TextField
               fullWidth
               variant="outlined"

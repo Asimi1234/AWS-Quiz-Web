@@ -137,6 +137,8 @@ Resources:
       Policies:
       - DynamoDBReadPolicy:
           TableName: QuizAttempts
+      - DynamoDBReadPolicy:
+          TableName: Users
       Environment:
         Variables:
           QUIZ_ATTEMPTS_TABLE: QuizAttempts
@@ -234,6 +236,24 @@ Resources:
               Ref: QuizApi
     Metadata:
       SamResourceId: ResetPasswordFunction
+  CheckUserExistsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: CheckUserExistsFunction
+      Handler: app.lambda_handler
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: Users
+      Events:
+        CheckUserExistsAPI:
+          Type: Api
+          Properties:
+            Path: /check-user-exists
+            Method: post
+            RestApiId:
+              Ref: QuizApi
+    Metadata:
+      SamResourceId: CheckUserExistsFunction
 Outputs:
   QuizApiUrl:
     Description: API Gateway endpoint URL for Quiz API

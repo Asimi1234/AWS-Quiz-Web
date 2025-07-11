@@ -22,7 +22,7 @@ def lambda_handler(event, context):
 
     try:
         body = json.loads(event.get("body", "{}"))
-        token = body.get("reset_token")
+        token = body.get("token")
         new_password = body.get("new_password")
 
         if not token or not new_password:

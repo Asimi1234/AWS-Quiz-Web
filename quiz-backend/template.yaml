@@ -128,6 +128,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: QuizAttempts
+        - DynamoDBReadPolicy:
+            TableName: Users
       Environment:
         Variables:
           QUIZ_ATTEMPTS_TABLE: QuizAttempts
@@ -211,6 +213,22 @@ Resources:
             Path: /reset-password
             Method: post
             RestApiId: !Ref QuizApi
+  CheckUserExistsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: check_user_exists/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: Users
+      Events:
+        CheckUserExistsAPI:
+          Type: Api
+          Properties:
+            Path: /check-user-exists
+            Method: post
+            RestApiId: !Ref QuizApi
+
 
 
 

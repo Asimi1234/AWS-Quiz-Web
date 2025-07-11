@@ -26,12 +26,43 @@ const SignupPage = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
 
+    // Validate fields filled
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast.error("Please fill all fields.");
       return;
     }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     try {
+      // Check for existing user first
+      const checkResponse = await fetch(`${API_BASE}/check-user-exists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: username.trim(),
+          email: email.trim(),
+        }),
+      });
+
+      const checkData = await checkResponse.json();
+
+      if (!checkResponse.ok) {
+        toast.error(checkData.message || "Error checking user.");
+        return;
+      }
+
+      if (checkData.exists) {
+        toast.error("Username or email already exists.");
+        return;
+      }
+
+      // If safe, proceed with signup
       const response = await fetch(`${API_BASE}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,10 +77,7 @@ const SignupPage = () => {
 
       if (response.ok) {
         toast.success("Signup successful! You can now log in.");
-
-        // Set flag indicating user has an account
         localStorage.setItem("hasAccount", "true");
-
         navigate("/login");
       } else {
         toast.error(data.message || "Signup failed.");
