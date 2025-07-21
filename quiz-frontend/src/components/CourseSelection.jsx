@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -92,8 +92,32 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
+  if (!token) {
+    return {};
+  }
   return { Authorization: `Bearer ${token}` };
 };
+
+
+const isTokenExpired = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return true;
+
+    const [, payloadBase64] = token.split(".");
+    // Normalize base64 to prevent atob errors
+    const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
+
+    const payloadJSON = atob(padded);
+    const payload = JSON.parse(payloadJSON);
+
+    return Date.now() >= payload.exp * 1000;
+  } catch (err) {
+    return true;
+  }
+};
+
 
 const CourseSelection = () => {
   const navigate = useNavigate();
@@ -105,8 +129,23 @@ const CourseSelection = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
+  // Token expiry check on load
+  useEffect(() => {
+    const expired = isTokenExpired(); 
+    if (expired) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    toast.error("Session expired. Please login again.");
+    navigate("/login");
+  }
+
+
+  }, [navigate]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
     toast.success("Logged out successfully.");
     navigate("/login");
   };
@@ -125,22 +164,14 @@ const CourseSelection = () => {
     setLoadingCourse(courseId);
 
     try {
-      // Build the API URL
-      let url = `${API_BASE_URL}/check-attempts?course_id=${encodeURIComponent(
-        courseId
-      )}&is_admin=${isAdmin}`;
-      if (isAdmin) {
-        if (!userId) {
-          toast.error("Missing user ID for admin check.");
-          navigate("/login");
-          return;
-        }
+      let url = `${API_BASE_URL}/check-attempts?course_id=${encodeURIComponent(courseId)}&is_admin=${isAdmin}`;
+      if (isAdmin && userId) {
         url += `&user_id=${encodeURIComponent(userId)}`;
       }
 
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const headers = getAuthHeaders();
+
+      const response = await axios.get(url, { headers });
 
       if (response.data.success && response.data.remaining_attempts > 0) {
         toast.success(
@@ -148,33 +179,39 @@ const CourseSelection = () => {
         );
         setTimeout(() => navigate(`/quiz/${courseId}`), 1200);
       } else if (!response.data.success) {
-        toast.error(
-          `Error: ${response.data.message || "Could not fetch attempt info."}`
-        );
+        toast.error(response.data.message || "Could not fetch attempt info.");
         setLoadingCourse(null);
       } else {
-        // Zero attempts left
         toast.error("No attempts remaining for this quiz.");
         setLoadingCourse(null);
       }
     } catch (error) {
-      console.error("Error checking attempts:", error);
-      toast.error("Failed to check quiz attempts. Please try again.");
       setLoadingCourse(null);
+
+      if (error.response) {
+        // Server responded but with error
+        toast.error(error.response.data?.message || "Server error checking attempts.");
+      } else if (error.request) {
+        // No response
+        toast.error("No response from server.");
+      } else {
+        // Other errors
+        toast.error("Something went wrong checking attempts.");
+      }
     }
   };
+
 
   const handleLeaderboardOpen = async (courseId) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/leaderboard?course_id=${encodeURIComponent(courseId)}`,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() } // consistent usage here
       );
       setLeaderboardData(response.data.leaderboard);
       setSelectedCourseId(courseId);
       setLeaderboardOpen(true);
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
       toast.error("Failed to load leaderboard.");
     }
   };

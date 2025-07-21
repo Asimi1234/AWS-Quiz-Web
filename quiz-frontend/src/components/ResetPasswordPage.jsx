@@ -53,7 +53,7 @@ const ResetPasswordPage = () => {
       if (response.ok) {
         toast.success("Password reset successfully!");
         setTimeout(() => {
-          navigate("/login");
+          navigate("/login", { state: { fromReset: true } });
         }, 1500);
       } else {
         toast.error(data.message || "Failed to reset password.");
@@ -76,7 +76,6 @@ const ResetPasswordPage = () => {
       }}
     >
       <Container maxWidth="xs">
-        {/* Logo and App Name */}
         <Box
           display="flex"
           alignItems="center"
@@ -106,7 +105,7 @@ const ResetPasswordPage = () => {
             IzyQuiz Lite
           </Typography>
 
-          <Box width={50} /> {/* Empty box to balance layout */}
+          <Box width={50} />
         </Box>
 
         <Paper

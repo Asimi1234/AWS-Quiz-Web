@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Quiz Backend with API Gateway, Lambda, DynamoDB
+Description: Quiz Backend with API Gateway, Lambda, DynamoDB, and JWT Auth
+
+Parameters:
+  SecretKey:
+    Type: String
+    Description: Secret key used for JWT authentication
 
 Globals:
   Function:
@@ -17,6 +22,24 @@ Resources:
         AllowMethods: "'OPTIONS,GET,POST'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: JWTAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
+        Authorizers:
+          JWTAuthorizer:
+            FunctionArn: !GetAtt JWTAuthorizerFunction.Arn
+            Identity:
+              Header: Authorization
+
+  JWTAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: jwt_authorizer/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          SECRET_KEY: !Ref SecretKey
+      Runtime: python3.11
 
   StartQuizFunction:
     Type: AWS::Serverless::Function
@@ -30,6 +53,8 @@ Resources:
             Path: /start-quiz
             Method: get
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
 
   SubmitAnswerFunction:
     Type: AWS::Serverless::Function
@@ -43,6 +68,9 @@ Resources:
             Path: /submit-answer
             Method: post
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
+
 
   GetAnswers:
     Type: AWS::Serverless::Function
@@ -56,6 +84,8 @@ Resources:
             Path: /get-answer
             Method: GET
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
 
   UserAttemptsFunction:
     Type: AWS::Serverless::Function
@@ -68,6 +98,7 @@ Resources:
       Environment:
         Variables:
           QUIZ_ATTEMPTS_TABLE: QuizAttempts
+          SECRET_KEY: !Ref SecretKey
       Events:
         UserAttemptsGet:
           Type: Api
@@ -75,12 +106,16 @@ Resources:
             Path: /user/attempts
             Method: get
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
         UserAttemptsPost:
           Type: Api
           Properties:
             Path: /user/attempts
             Method: post
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
 
   CheckAttemptsFunction:
     Type: AWS::Serverless::Function
@@ -93,6 +128,7 @@ Resources:
       Environment:
         Variables:
           QUIZ_ATTEMPTS_TABLE: QuizAttempts
+          SECRET_KEY: !Ref SecretKey
       Events:
         CheckAttemptsAPI:
           Type: Api
@@ -100,6 +136,8 @@ Resources:
             Path: /check-attempts
             Method: get
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
 
   SubmitQuizFunction:
     Type: AWS::Serverless::Function
@@ -119,6 +157,8 @@ Resources:
             Path: /submit-quiz
             Method: post
             RestApiId: !Ref QuizApi
+            Auth:
+              Authorizer: JWTAuthorizer
 
   LeaderboardFunction:
     Type: AWS::Serverless::Function
@@ -140,6 +180,7 @@ Resources:
             Path: /leaderboard
             Method: get
             RestApiId: !Ref QuizApi
+
   UserLoginFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -150,7 +191,7 @@ Resources:
             TableName: Users
       Environment:
         Variables:
-          SECRET_KEY: ""
+          SECRET_KEY: !Ref SecretKey
       Events:
         UserLoginAPI:
           Type: Api
@@ -158,6 +199,7 @@ Resources:
             Path: /login
             Method: post
             RestApiId: !Ref QuizApi
+
   UserSignupFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -168,7 +210,7 @@ Resources:
             TableName: Users
       Environment:
         Variables:
-          SECRET_KEY: ""
+          SECRET_KEY: !Ref SecretKey
       Events:
         UserSignupAPI:
           Type: Api
@@ -176,6 +218,7 @@ Resources:
             Path: /signup
             Method: post
             RestApiId: !Ref QuizApi
+
   RequestPasswordResetFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -186,7 +229,7 @@ Resources:
             TableName: Users
       Environment:
         Variables:
-          SECRET_KEY: ""
+          SECRET_KEY: !Ref SecretKey
       Events:
         RequestPasswordResetAPI:
           Type: Api
@@ -205,7 +248,7 @@ Resources:
             TableName: Users
       Environment:
         Variables:
-          SECRET_KEY: ""
+          SECRET_KEY: !Ref SecretKey
       Events:
         ResetPasswordAPI:
           Type: Api
@@ -213,6 +256,7 @@ Resources:
             Path: /reset-password
             Method: post
             RestApiId: !Ref QuizApi
+
   CheckUserExistsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -229,9 +273,25 @@ Resources:
             Method: post
             RestApiId: !Ref QuizApi
 
-
-
-
+  GoogleAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: google_auth/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Users
+      Environment:
+        Variables:
+          GOOGLE_CLIENT_ID: ""
+          SECRET_KEY: !Ref SecretKey
+      Events:
+        GoogleAuthAPI:
+          Type: Api
+          Properties:
+            Path: /auth/google
+            Method: post
+            RestApiId: !Ref QuizApi
 
 Outputs:
   QuizApiUrl:
@@ -245,4 +305,3 @@ Outputs:
     Value: QuizAttempts
     Export:
       Name: !Sub "${AWS::StackName}-QuizAttemptsTableName"
-

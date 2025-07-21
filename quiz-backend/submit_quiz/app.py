@@ -1,54 +1,31 @@
 import json
 import boto3
-import decimal
-import jwt
 import os
 from datetime import datetime
 from utils import decimal_default
 
 # DynamoDB setup
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('QuizAttempts')
-
-# JWT secret key
-SECRET_KEY = os.environ['SECRET_KEY']
-
-def verify_token(token):
-    try:
-        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return decoded
-    except jwt.ExpiredSignatureError:
-        return {"error": "Token expired"}
-    except jwt.InvalidTokenError:
-        return {"error": "Invalid token"}
+table = dynamodb.Table(os.environ.get("QUIZ_ATTEMPTS_TABLE", "QuizAttempts"))
 
 def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
-        # === Verify JWT token ===
-        auth_header = event['headers'].get('Authorization')
-        if not auth_header:
+        # === Extract userId from custom Lambda authorizer context ===
+        try:
+            authorizer_ctx = event["requestContext"]["authorizer"]
+            user_id = authorizer_ctx.get("userId")
+            if not user_id:
+                raise ValueError("Missing userId")
+        except Exception as e:
             return {
                 "statusCode": 401,
                 "headers": cors_headers(),
-                "body": json.dumps({"error": "Missing token"})
+                "body": json.dumps({"error": f"Unauthorized: {str(e)}"})
             }
-
-        token = auth_header.split(" ")[1]
-        verification_result = verify_token(token)
-
-        if "error" in verification_result:
-            return {
-                "statusCode": 401,
-                "headers": cors_headers(),
-                "body": json.dumps({"error": verification_result["error"]})
-            }
-
-        # Get trusted userId from token payload
-        user_id = verification_result["userId"]
-
-        # Parse body
+        
+        # === Parse body ===
         body = json.loads(event.get("body", "{}"))
         course_id = body.get("course_id")
         final_score = body.get("score")
@@ -60,7 +37,7 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Missing course_id or score"})
             }
 
-        # Update the DynamoDB item
+        # === Update the score in DynamoDB ===
         table.update_item(
             Key={
                 'user_id': user_id,

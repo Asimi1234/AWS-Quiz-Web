@@ -34,10 +34,18 @@ def lambda_handler(event, context):
             }
 
         # Query for the user by username via GSI
-        response = users_table.query(
-            IndexName='username-index',
-            KeyConditionExpression=Key('username').eq(username)
-        )
+        try:
+            response = users_table.query(
+                IndexName='username-index',
+                KeyConditionExpression=Key('username').eq(username)
+            )
+        except Exception as db_error:
+            print(f"DynamoDB error: {str(db_error)}")
+            return {
+                "statusCode": 500,
+                "headers": cors_headers,
+                "body": json.dumps({"message": "Database error"})
+            }
 
         if not response['Items']:
             return {
@@ -61,11 +69,14 @@ def lambda_handler(event, context):
             {
                 'userId': user['user_id'],
                 'username': username,
+                'isAdmin': user.get('is_admin', False),
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=3)
             },
             SECRET_KEY,
             algorithm='HS256'
         )
+        if isinstance(token, bytes):
+            token = token.decode('utf-8')
 
         return {
             "statusCode": 200,

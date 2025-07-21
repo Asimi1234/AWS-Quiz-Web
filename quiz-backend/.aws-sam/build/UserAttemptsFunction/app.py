@@ -1,53 +1,73 @@
 import json
-import boto3
 import os
+import boto3
 from datetime import datetime
 from decimal import Decimal
 
-# Initialize DynamoDB resource
-dynamodb = boto3.resource('dynamodb')
+# === Configuration ===
 table_name = os.environ.get('QUIZ_ATTEMPTS_TABLE', 'QuizAttempts')
+MAX_FREE_ATTEMPTS = int(os.environ.get('MAX_FREE_ATTEMPTS', 5))
+MAX_ADMIN_ATTEMPTS = int(os.environ.get('MAX_ADMIN_ATTEMPTS', 60))
+
+# === AWS Resources ===
+dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(table_name)
 
-MAX_FREE_ATTEMPTS = 5
-MAX_ADMIN_ATTEMPTS = 60
-
-def lambda_handler(event, context):
-    cors_headers = {
+# === CORS Headers ===
+def cors_headers():
+    return {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
     }
 
+# === Main Lambda Handler ===
+def lambda_handler(event, context):
     print("Received event:", json.dumps(event))
 
-    method = event.get("httpMethod")
+    method = event.get("httpMethod", "")
+    headers = cors_headers()
 
+    # === Handle CORS preflight ===
     if method == "OPTIONS":
         return {
             "statusCode": 200,
-            "headers": cors_headers,
+            "headers": headers,
             "body": ""
         }
 
-    elif method == "GET":
-        params = event.get("queryStringParameters") or {}
-        user_id = params.get("user_id")
-        course_id = params.get("course_id")
-        is_admin = params.get("is_admin", "false").lower() == "true"
+    # === Extract userId and isAdmin from JWT claims ===
+    try:
+        authorizer = event["requestContext"]["authorizer"]
+        user_id = authorizer.get("userId")
+        is_admin = authorizer.get("isAdmin", "false").lower() == "true"
 
-        if not user_id or not course_id:
+        if not user_id:
+            raise ValueError("Missing userId in authorizer context")
+    except Exception as e:
+        return {
+            "statusCode": 401,
+            "headers": headers,
+            "body": json.dumps({"error": f"Unauthorized: {str(e)}"})
+        }
+
+    print(f"Authenticated user: {user_id}, is_admin: {is_admin}")
+
+    if method == "GET":
+        params = event.get("queryStringParameters") or {}
+        course_id = params.get("course_id")
+
+        if not course_id:
             return {
                 "statusCode": 400,
-                "headers": cors_headers,
-                "body": json.dumps({"error": "Missing user_id or course_id"})
+                "headers": headers,
+                "body": json.dumps({"error": "Missing course_id"})
             }
 
         try:
             response = table.get_item(Key={"user_id": user_id, "course_id": course_id})
             item = response.get("Item", {})
-
             attempts_field = "admin_attempts" if is_admin else "free_attempts"
             attempts = item.get(attempts_field, 0)
             attempts = int(attempts) if isinstance(attempts, Decimal) else attempts
@@ -57,7 +77,7 @@ def lambda_handler(event, context):
 
             return {
                 "statusCode": 200,
-                "headers": cors_headers,
+                "headers": headers,
                 "body": json.dumps({
                     "success": True,
                     "attempts": attempts,
@@ -66,27 +86,24 @@ def lambda_handler(event, context):
                     "is_admin": is_admin
                 })
             }
-
         except Exception as e:
             print("Error fetching attempts:", str(e))
             return {
                 "statusCode": 500,
-                "headers": cors_headers,
+                "headers": headers,
                 "body": json.dumps({"error": "Internal Server Error"})
             }
 
     elif method == "POST":
         try:
             body = json.loads(event.get("body", "{}"))
-            user_id = body.get("user_id")
             course_id = body.get("course_id")
-            is_admin = body.get("is_admin", False)
 
-            if not user_id or not course_id:
+            if not course_id:
                 return {
                     "statusCode": 400,
-                    "headers": cors_headers,
-                    "body": json.dumps({"error": "Missing user_id or course_id"})
+                    "headers": headers,
+                    "body": json.dumps({"error": "Missing course_id"})
                 }
 
             timestamp = datetime.utcnow().isoformat() + "Z"
@@ -111,12 +128,11 @@ def lambda_handler(event, context):
 
             new_attempts = response["Attributes"].get(attempts_field, 1)
             new_attempts = int(new_attempts) if isinstance(new_attempts, Decimal) else new_attempts
-
             remaining_attempts = max(0, max_attempts - new_attempts)
 
             return {
                 "statusCode": 200,
-                "headers": cors_headers,
+                "headers": headers,
                 "body": json.dumps({
                     "success": True,
                     "current_attempts": new_attempts,
@@ -129,7 +145,7 @@ def lambda_handler(event, context):
         except json.JSONDecodeError:
             return {
                 "statusCode": 400,
-                "headers": cors_headers,
+                "headers": headers,
                 "body": json.dumps({"error": "Invalid JSON in request body"})
             }
 
@@ -137,13 +153,13 @@ def lambda_handler(event, context):
             print("Error recording attempt:", str(e))
             return {
                 "statusCode": 500,
-                "headers": cors_headers,
+                "headers": headers,
                 "body": json.dumps({"error": "Internal Server Error"})
             }
 
     else:
         return {
             "statusCode": 405,
-            "headers": cors_headers,
+            "headers": headers,
             "body": json.dumps({"error": f"Method {method} not allowed"})
         }

@@ -6,17 +6,22 @@ import QuestionCard from "./QuestionCard";
 import ResultCard from "./ResultCard";
 import ConfirmDialog from "./ConfirmDialog";
 import AdminDialog from "./AdminDialog";
+import { isTokenExpired } from "../utils/auth";
+import { toast } from "react-toastify";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 const secretCode = process.env.REACT_APP_CODE;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
+
   return {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
+
 };
+
 
 const Quiz = () => {
   const { courseId } = useParams();
@@ -47,19 +52,42 @@ const Quiz = () => {
       }))
       .sort(() => 0.5 - Math.random());
 
+
+  const logoutAndRedirect = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    navigate("/login");
+  }, [navigate]);
+
   const fetchQuestions = useCallback(async () => {
+    const url = `${API_BASE}/start-quiz?courseId=${courseId}`;
+
+    
     try {
-      const res = await fetch(`${API_BASE}/start-quiz?courseId=${courseId}`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await fetch(url, 
+        {method:'GET', 
+         headers: getAuthHeaders()});
+
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Session expired. Please login again.");
+        logoutAndRedirect();
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Unexpected error: ${res.status}`);
+      }
+
       const data = await res.json();
       setQuestions(shuffleQuestions(data.questions));
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch questions", err);
-      setLoading(false);
+      toast.error("Failed to load quiz. Please try again.");
+      // Do NOT redirect unless we know it's an auth error
     }
-  }, [courseId]);
+  }, [courseId, logoutAndRedirect]);
+
 
   const handleAnswer = (questionId, answer) => {
     setAnswers((prev) => ({ ...prev, [questionId]: { answer } }));
@@ -70,6 +98,8 @@ const Quiz = () => {
       const res = await fetch(`${API_BASE}/get-answer?courseId=${courseId}`, {
         headers: getAuthHeaders(),
       });
+      if (res.status === 401 || res.status === 403) throw new Error("Unauthorized");
+
       const data = await res.json();
       const corrects = data.correct_answers;
       setCorrectAnswers(corrects);
@@ -105,7 +135,6 @@ const Quiz = () => {
         body: JSON.stringify({
           user_id: userId,
           course_id: courseId,
-          is_admin: isAdmin,
         }),
       });
       const attemptData = await attemptRes.json();
@@ -116,10 +145,10 @@ const Quiz = () => {
 
       localStorage.removeItem(progressKey);
     } catch (err) {
-      console.error("Error submitting quiz or recording attempt:", err);
-      alert("Error submitting quiz.");
+      toast.error("Session expired or network error.");
+      logoutAndRedirect();
     }
-  }, [answers, courseId, isAdmin, navigate, progressKey]);
+  }, [answers, courseId, isAdmin, navigate, progressKey, logoutAndRedirect]);
 
   const handleAdminSubmit = async () => {
     if (adminInput === secretCode) {
@@ -147,7 +176,6 @@ const Quiz = () => {
         const data = await res.json();
         setRemainingAttempts(data.remaining_attempts);
       } catch (err) {
-        console.error("Failed to check admin attempts:", err);
         alert("Failed to update admin attempts.");
       }
     } else {
@@ -163,19 +191,32 @@ const Quiz = () => {
   const handleCancelSubmit = () => setConfirmDialogOpen(false);
 
   useEffect(() => {
-    const checkAttempts = async () => {
-      const savedAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
-      setIsAdmin(savedAdmin);
+  const checkAttempts = async () => {
+    const expired = isTokenExpired();
+    
+    if (expired) {
+      toast.error("Session expired. Please login again.");
+      logoutAndRedirect();
+      return;
+    }
+  
+    const savedAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
+    setIsAdmin(savedAdmin);
+  
+    const userId = localStorage.getItem("userId");
+    if (!userId) return navigate("/login");
 
-      const userId = localStorage.getItem("userId");
-      if (!userId) return navigate("/login");
 
       try {
-        // Call check-attempts without user_id — token will handle identity
         const res = await fetch(
-          `${API_BASE}/check-attempts?course_id=${courseId}&is_admin=${savedAdmin}`,
+          `${API_BASE}/check-attempts?course_id=${courseId}`,
           { headers: getAuthHeaders() }
         );
+
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("Unauthorized");
+        }
+
         const data = await res.json();
 
         if (data.success) {
@@ -206,23 +247,19 @@ const Quiz = () => {
               localStorage.removeItem(progressKey);
             }
           }
-
-          // No resume — fetch fresh questions
           fetchQuestions();
         } else {
-          console.error("API error:", data.message);
-          alert("Failed to check attempts: " + data.message);
+          toast.error("Failed to check attempts: " + data.message);
           setLoading(false);
         }
       } catch (error) {
-        console.error("Failed to check attempts:", error);
-        alert("Failed to check attempts.");
-        setLoading(false);
+        toast.error("Session expired. Please log in again.");
+        logoutAndRedirect();
       }
     };
 
     checkAttempts();
-  }, [courseId, fetchQuestions, progressKey, resumeChecked, navigate]);
+  }, [courseId, navigate, fetchQuestions, progressKey, resumeChecked, logoutAndRedirect]);
 
   useEffect(() => {
     if (!loading && !completed) {
@@ -264,6 +301,7 @@ const Quiz = () => {
         <CircularProgress />
       </Box>
     );
+
   if (completed)
     return (
       <ResultCard

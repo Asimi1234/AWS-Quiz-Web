@@ -7,12 +7,16 @@ import {
   Button,
   Paper,
   Link,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import BrandHeader from "./BrandHeader";
+import googleIcon from "../images/google.png";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -23,13 +27,11 @@ const SignupPage = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    // Validate fields filled
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast.error("Please fill all fields.");
       return;
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       toast.error("Please enter a valid email address.");
@@ -37,7 +39,6 @@ const SignupPage = () => {
     }
 
     try {
-      // Check for existing user first
       const checkResponse = await fetch(`${API_BASE}/check-user-exists`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,7 +49,6 @@ const SignupPage = () => {
       });
 
       const checkData = await checkResponse.json();
-
       if (!checkResponse.ok) {
         toast.error(checkData.message || "Error checking user.");
         return;
@@ -59,7 +59,6 @@ const SignupPage = () => {
         return;
       }
 
-      // If safe, proceed with signup
       const response = await fetch(`${API_BASE}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,11 +70,12 @@ const SignupPage = () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        toast.success("Signup successful! You can now log in.");
-        localStorage.setItem("hasAccount", "true");
-        navigate("/login");
+        toast.success("Signup successful!");
+        localStorage.setItem("token", data.token);
+        const decoded = jwtDecode(data.token);
+        localStorage.setItem("username", decoded.username || username);
+        navigate("/courses");
       } else {
         toast.error(data.message || "Signup failed.");
       }
@@ -83,6 +83,51 @@ const SignupPage = () => {
       console.error("Signup error:", error);
       toast.error("An error occurred.");
     }
+  };
+
+  const handleGoogleSignup = () => {
+    if (!window.google?.accounts?.oauth2) {
+      toast.error("Google SDK not loaded.");
+      return;
+    }
+
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "email profile openid",
+      callback: async (response) => {
+        if (!response || !response.access_token) {
+          toast.error("Failed to authenticate with Google.");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: response.access_token }),
+          });
+
+          const result = await res.json();
+
+          if (res.ok) {
+            toast.success("Signed in with Google!");
+            localStorage.setItem("token", result.token);
+
+            const decoded = jwtDecode(result.token);
+            localStorage.setItem("username", decoded.username || "User");
+
+            navigate("/courses");
+          } else {
+            toast.error(result.message || "Google signup failed.");
+          }
+        } catch (err) {
+          console.error("Google signup error:", err);
+          toast.error("An error occurred with Google signup.");
+        }
+      },
+    });
+
+    client.requestAccessToken();
   };
 
   return (
@@ -98,10 +143,7 @@ const SignupPage = () => {
       }}
     >
       <Container maxWidth="xs">
-        {/* Logo and App Name */}
         <BrandHeader />
-
-        {/* Signup Form */}
         <Paper
           elevation={5}
           sx={{
@@ -115,10 +157,7 @@ const SignupPage = () => {
             variant="h6"
             align="center"
             gutterBottom
-            sx={{ 
-              color: "#0f4c75",
-              fontWeight: "bold"
-            }}
+            sx={{ color: "#0f4c75", fontWeight: "bold" }}
           >
             Create Your Account
           </Typography>
@@ -162,18 +201,50 @@ const SignupPage = () => {
             >
               Sign Up
             </Button>
+          </form>
 
-            <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+          <Typography variant="body2" align="center" sx={{ mt: 1, mb: 1 }}>
+            Or sign up with:
+          </Typography>
+
+          <Box display="flex" justifyContent="center" mb={2}>
+            <IconButton
+              onClick={handleGoogleSignup}
+              sx={{
+                border: "1px solid #ccc",
+                backgroundColor: "#fff",
+                "&:hover": {
+                  backgroundColor: "#f7f7f7",
+                },
+              }}
+            >
+              <img
+                src={googleIcon}
+                alt="Google"
+                style={{ width: 24, height: 24 }}
+              />
+            </IconButton>
+          </Box>
+
+          <Box mt={3} textAlign="center">
+            <Typography variant="body2" sx={{ color: "#333" }}>
               Already have an account?{" "}
               <Link
                 href="/login"
-                underline="hover"
-                sx={{ color: "#0f4c75", fontWeight: "bold" }}
+                underline="none"
+                sx={{
+                  color: "#0f4c75",
+                  fontWeight: "bold",
+                  "&:hover": {
+                    textDecoration: "underline",
+                    color: "#3282b8",
+                  },
+                }}
               >
                 Login here
               </Link>
             </Typography>
-          </form>
+          </Box>
         </Paper>
       </Container>
     </Box>
