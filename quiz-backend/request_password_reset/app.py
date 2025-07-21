@@ -34,23 +34,23 @@ def send_reset_email(to_email, reset_link):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Password Reset - IzyQuiz</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
-        <div style="max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15); position: relative;">
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); min-height: 100vh;">
+        <div style="max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;">
             
             <!-- Decorative top bar -->
-            <div style="height: 6px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);"></div>
+            <div style="height: 6px; background: linear-gradient(90deg, #0f4c75 0%, #3282b8 100%);"></div>
             
             <!-- Header Section -->
-            <div style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); position: relative;">
+            <div style="padding: 25px 30px; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); position: relative;">
                 <!-- Logo container with subtle shadow -->
-                <div style="display: inline-block; padding: 20px; background: #ffffff; border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px;">
-                    <img src="{LOGO_URL}" alt="IzyQuiz Logo" style="width: 60px; height: 60px; display: block;" />
+                <div style="display: inline-block; padding: 15px; background: #ffffff; border-radius: 50%; box-shadow: 0 8px 20px rgba(15, 76, 117, 0.15); margin-bottom: 15px;">
+                    <img src="{LOGO_URL}" alt="IzyQuiz Logo" style="width: 50px; height: 50px; display: block;" />
                 </div>
                 
-                <h1 style="color: #2d3748; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+                <h1 style="color: #0f2027; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
                     🔐 Password Reset
                 </h1>
-                <p style="color: #4a5568; margin: 10px 0 0 0; font-size: 16px; opacity: 0.8;">
+                <p style="color: #203a43; margin: 10px 0 0 0; font-size: 16px; opacity: 0.8;">
                     Secure your account in just one click
                 </p>
             </div>
@@ -58,13 +58,13 @@ def send_reset_email(to_email, reset_link):
             <!-- Main Content -->
             <div style="padding: 40px 30px;">
                 <!-- Greeting with emoji -->
-                <p style="font-size: 18px; color: #2d3748; margin: 0 0 20px 0; font-weight: 600;">
+                <p style="font-size: 18px; color: #0f2027; margin: 0 0 20px 0; font-weight: 600;">
                     👋 Hello there!
                 </p>
                 
                 <!-- Main message with better typography -->
-                <p style="font-size: 16px; color: #4a5568; line-height: 1.6; margin: 0 0 30px 0;">
-                    We received a request to reset your password for your <strong style="color: #2d3748;">IzyQuiz</strong> account. 
+                <p style="font-size: 16px; color: #203a43; line-height: 1.6; margin: 0 0 30px 0;">
+                    We received a request to reset your password for your <strong style="color: #0f2027;">IzyQuiz</strong> account. 
                     Don't worry - it happens to the best of us! Click the button below to create a new, secure password.
                 </p>
 
@@ -72,17 +72,17 @@ def send_reset_email(to_email, reset_link):
                 <div style="text-align: center; margin: 40px 0;">
                     <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                         <tr>
-                            <td style="border-radius: 50px; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); padding: 2px;">
+                            <td style="border-radius: 50px; background: linear-gradient(45deg, #0f4c75 0%, #3282b8 100%); padding: 2px;">
                                 <a href="{reset_link}" 
                                    style="display: inline-block; 
                                           padding: 16px 40px; 
-                                          background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); 
+                                          background: linear-gradient(45deg, #0f4c75 0%, #3282b8 100%); 
                                           color: #ffffff; 
                                           text-decoration: none; 
                                           font-size: 18px; 
                                           font-weight: 600; 
                                           border-radius: 50px; 
-                                          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+                                          box-shadow: 0 8px 25px rgba(15, 76, 117, 0.3);
                                           transition: all 0.3s ease;">
                                     🚀 Reset My Password
                                 </a>
@@ -92,21 +92,21 @@ def send_reset_email(to_email, reset_link):
                 </div>
 
                 <!-- Security note with icon -->
-                <div style="background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%); 
-                           border-left: 4px solid #38b2ac; 
+                <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); 
+                           border-left: 4px solid #0f4c75; 
                            padding: 20px; 
                            border-radius: 8px; 
                            margin: 30px 0;">
-                    <p style="margin: 0; font-size: 14px; color: #2d3748; line-height: 1.5;">
+                    <p style="margin: 0; font-size: 14px; color: #0f2027; line-height: 1.5;">
                         <strong>🛡️ Security Note:</strong> This link will expire in <strong>15 minutes</strong> for your security. 
                         If you didn't request this reset, you can safely ignore this email - your password won't be changed.
                     </p>
                 </div>
 
                 <!-- Alternative action -->
-                <p style="font-size: 14px; color: #718096; line-height: 1.6; margin: 30px 0 0 0; text-align: center;">
+                <p style="font-size: 14px; color: #2c5364; line-height: 1.6; margin: 30px 0 0 0; text-align: center;">
                     Having trouble with the button? Copy and paste this link into your browser:<br>
-                    <a href="{reset_link}" style="color: #667eea; word-break: break-all; text-decoration: underline;">
+                    <a href="{reset_link}" style="color: #0f4c75; word-break: break-all; text-decoration: underline;">
                         {reset_link}
                     </a>
                 </p>
@@ -120,19 +120,19 @@ def send_reset_email(to_email, reset_link):
                 
                 <!-- Social proof / trust indicators -->
                 <div style="margin-bottom: 20px;">
-                    <p style="margin: 0; font-size: 14px; color: #4a5568; font-weight: 600;">
+                    <p style="margin: 0; font-size: 14px; color: #203a43; font-weight: 600;">
                         📧 Trusted by thousands of quiz creators worldwide
                     </p>
                 </div>
 
                 <!-- Company info -->
-                <p style="margin: 0 0 10px 0; font-size: 12px; color: #a0aec0; line-height: 1.4;">
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #2c5364; line-height: 1.4;">
                     &copy; {datetime.datetime.now().year} <strong>IzyQuiz</strong> - Making quizzes easy and fun!
                 </p>
                 
                 <!-- Contact info -->
-                <p style="margin: 0; font-size: 12px; color: #a0aec0;">
-                    Questions? Visit our help center.
+                <p style="margin: 0; font-size: 12px; color: #2c5364;">
+                    Questions? Reply to this email or visit our help center.
                 </p>
             </div>
         </div>

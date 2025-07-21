@@ -38,7 +38,6 @@ const RequestPasswordResetPage = () => {
 
       if (response.ok) {
         toast.success("Reset link sent successfully!");
-        window.alert("Reset token was successfully sent!");
       } else {
         toast.error(data.message || "Failed to request reset.");
       }
