@@ -15,7 +15,14 @@ import RequestPasswordResetPage from "./components/RequestPasswordResetPage";
 import ResetPasswordPage from "./components/ResetPasswordPage";
 import CourseSelection from "./components/CourseSelection";
 import Quiz from "./components/Quiz";
-import RequireAuth from "./components/RequireAuth"; // ✅ IMPORT the real RequireAuth with Outlet
+import Dashboard from "./components/Dashboard";
+import CreateQuiz from "./pages/CreateQuiz";
+import RequireAuth from "./components/RequireAuth";
+import MyQuizzes from "./pages/MyQuizzes";
+import EditQuizPage from "./pages/EditQuizPage";
+import StartQuiz from "./pages/StartQuiz";
+
+
 
 // Redirect logic based on localStorage
 const RootRedirect = () => {
@@ -23,7 +30,7 @@ const RootRedirect = () => {
   const hasAccount = localStorage.getItem("hasAccount") === "true";
 
   if (token) {
-    return <Navigate to="/courses" replace />;
+    return <Navigate to="/login" replace />;  // Redirect to dashboard now
   } else if (hasAccount) {
     return <Navigate to="/login" replace />;
   } else {
@@ -42,10 +49,16 @@ const App = () => {
         <Route path="/request-password-reset" element={<RequestPasswordResetPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* 🔒 Protected routes wrapped in RequireAuth */}
+        {/* Protected routes */}
         <Route element={<RequireAuth />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/create-quiz" element={<CreateQuiz />} />
           <Route path="/courses" element={<CourseSelection />} />
           <Route path="/quiz/:courseId" element={<Quiz />} />
+          <Route path="/my-quizzes" element={<MyQuizzes />} />
+          <Route path="/edit-quiz/:quizId" element={<EditQuizPage />} />
+          <Route path="/start-quiz/:courseId/:quizId" element={<StartQuiz />} />
+
         </Route>
 
         {/* Catch-all */}

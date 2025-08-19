@@ -126,4 +126,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["JWTAuthorizerFunction"]
 
+[function_build_definitions.2ea47701-db09-48d6-987d-a10e3a708828]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "user/create_quiz/app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["CreateQuizFunction", "DeleteQuizFunction", "GetQuizzesFunction", "GetQuizFunction", "GetQuizAttemptsFunction", "SubmitAnswersFunction", "GetAllAttemptsFunction", "UpdateQuizFunction"]
+
+[function_build_definitions.526492c3-15f5-4ab0-806d-d9c6ac2a44a8]
+codeuri = "C:\\Users\\LENOVO PC\\quiz-website\\quiz-backend\\user\\get_dashboard"
+runtime = "python3.11"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetDashboardFunction"]
+
 [layer_build_definitions]

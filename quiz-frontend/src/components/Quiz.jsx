@@ -1,11 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Container, Box, CircularProgress } from "@mui/material";
+import { Container, Box, CircularProgress, Typography, Button, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import QuizHeader from "./QuizHeader";
-import QuestionCard from "./QuestionCard";
-import ResultCard from "./ResultCard";
-import ConfirmDialog from "./ConfirmDialog";
-import AdminDialog from "./AdminDialog";
 import { isTokenExpired } from "../utils/auth";
 import { toast } from "react-toastify";
 
@@ -14,14 +9,11 @@ const secretCode = process.env.REACT_APP_CODE;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
-
   return {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
-
 };
-
 
 const Quiz = () => {
   const { courseId } = useParams();
@@ -52,7 +44,6 @@ const Quiz = () => {
       }))
       .sort(() => 0.5 - Math.random());
 
-
   const logoutAndRedirect = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
@@ -62,12 +53,12 @@ const Quiz = () => {
 
   const fetchQuestions = useCallback(async () => {
     const url = `${API_BASE}/start-quiz?courseId=${courseId}`;
-
     
     try {
-      const res = await fetch(url, 
-        {method:'GET', 
-         headers: getAuthHeaders()});
+      const res = await fetch(url, {
+        method: 'GET', 
+        headers: getAuthHeaders()
+      });
 
       if (res.status === 401 || res.status === 403) {
         toast.error("Session expired. Please login again.");
@@ -84,10 +75,8 @@ const Quiz = () => {
       setLoading(false);
     } catch (err) {
       toast.error("Failed to load quiz. Please try again.");
-      // Do NOT redirect unless we know it's an auth error
     }
   }, [courseId, logoutAndRedirect]);
-
 
   const handleAnswer = (questionId, answer) => {
     setAnswers((prev) => ({ ...prev, [questionId]: { answer } }));
@@ -183,29 +172,28 @@ const Quiz = () => {
     }
   };
 
-  const handleOpenConfirm = () => setConfirmDialogOpen(true);
-  const handleConfirmSubmit = () => {
-    setConfirmDialogOpen(false);
-    handleFinalSubmit();
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-  const handleCancelSubmit = () => setConfirmDialogOpen(false);
 
+  // Effects remain the same
   useEffect(() => {
-  const checkAttempts = async () => {
-    const expired = isTokenExpired();
+    const checkAttempts = async () => {
+      const expired = isTokenExpired();
+      
+      if (expired) {
+        toast.error("Session expired. Please login again.");
+        logoutAndRedirect();
+        return;
+      }
     
-    if (expired) {
-      toast.error("Session expired. Please login again.");
-      logoutAndRedirect();
-      return;
-    }
-  
-    const savedAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
-    setIsAdmin(savedAdmin);
-  
-    const userId = localStorage.getItem("userId");
-    if (!userId) return navigate("/login");
-
+      const savedAdmin = localStorage.getItem(`isAdmin-${courseId}`) === "true";
+      setIsAdmin(savedAdmin);
+    
+      const userId = localStorage.getItem("userId");
+      if (!userId) return navigate("/login");
 
       try {
         const res = await fetch(
@@ -295,67 +283,194 @@ const Quiz = () => {
     setResumeChecked(false);
   }, [courseId]);
 
-  if (loading)
+  if (loading) {
     return (
-      <Box textAlign="center" mt={10}>
-        <CircularProgress />
-      </Box>
+      <Container>
+        <Box textAlign="center" mt={10}>
+          <CircularProgress />
+          <Typography>Loading quiz...</Typography>
+        </Box>
+      </Container>
     );
+  }
 
-  if (completed)
+  if (completed) {
     return (
-      <ResultCard
-        score={score}
-        questions={questions}
-        answers={answers}
-        correctAnswers={correctAnswers}
-        courseId={courseId}
-        navigate={navigate}
-      />
+      <Container>
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h4" gutterBottom>Quiz Completed!</Typography>
+          <Typography variant="h6">Your Score: {score} out of {questions.length}</Typography>
+          <Typography variant="body1" sx={{ mt: 2, mb: 3 }}>
+            Percentage: {Math.round((score / questions.length) * 100)}%
+          </Typography>
+          
+          <Typography variant="h6" gutterBottom>Review:</Typography>
+          {questions.map((q, index) => {
+            const userAnswer = answers[q._id]?.answer || "";
+            const correctAnswer = correctAnswers[q._id] || "";
+            const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+            
+            return (
+              <Box key={index} sx={{ mb: 2, p: 2, border: "1px solid #ddd" }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {index + 1}. {q.text}
+                </Typography>
+                <Typography color={isCorrect ? "green" : "red"}>
+                  Your answer: {userAnswer || "No answer"}
+                </Typography>
+                <Typography color="green">
+                  Correct answer: {correctAnswer}
+                </Typography>
+              </Box>
+            );
+          })}
+          
+          <Button 
+            variant="contained" 
+            onClick={() => navigate("/courses")}
+            sx={{ mt: 2 }}
+          >
+            Back to COURSE SELECTION
+          </Button>
+        </Paper>
+      </Container>
     );
+  }
+
+  const currentQuestion = questions[current];
 
   return (
-    <Box sx={{ minHeight: "100vh", py: 4, px: 2, backgroundColor: "#f5f5f5" }}>
-      <Container maxWidth="sm">
-        <QuizHeader
-          timeLeft={timeLeft}
-          attemptsLeft={remainingAttempts}
-          isAdmin={isAdmin}
-          answeredCount={Object.keys(answers).length}
-          totalQuestions={questions.length}
-          courseId={courseId}
-        />
-        <QuestionCard
-          question={questions[current]}
-          questionIndex={current}
-          totalQuestions={questions.length}
-          answers={answers}
-          handleAnswer={handleAnswer}
-          handleNext={() =>
-            setCurrent((c) => Math.min(c + 1, questions.length - 1))
-          }
-          handlePrevious={() => setCurrent((c) => Math.max(c - 1, 0))}
-          handleOpenConfirm={handleOpenConfirm}
-          questions={questions}
-          current={current}
-          setCurrent={setCurrent}
-        />
-        <AdminDialog
-          open={adminDialogOpen}
-          onClose={() => setAdminDialogOpen(false)}
-          onSubmit={handleAdminSubmit}
-          adminInput={adminInput}
-          setAdminInput={setAdminInput}
-          adminError={adminError}
-          navigate={navigate}
-        />
-        <ConfirmDialog
-          open={confirmDialogOpen}
-          onClose={handleCancelSubmit}
-          onConfirm={handleConfirmSubmit}
-        />
-      </Container>
-    </Box>
+    <Container maxWidth="md" sx={{ py: 3 }}>
+      
+      {/* Basic Header Info */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="h6">Quiz</Typography>
+          <Typography variant="body1">Time: {formatTime(timeLeft)}</Typography>
+        </Box>
+        <Typography variant="body2">
+          Attempts left: {remainingAttempts} | 
+          Progress: {Object.keys(answers).length}/{questions.length} answered
+          {isAdmin && " (Admin Mode)"}
+        </Typography>
+      </Paper>
+
+      {/* Current Question */}
+      <Paper sx={{ p: 3, mb: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Question {current + 1} of {questions.length}
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 3 }}>
+          {currentQuestion?.text}
+        </Typography>
+
+        {/* Answer Options */}
+        {currentQuestion?.options?.map((option, index) => (
+          <Box key={index} sx={{ mb: 1 }}>
+            <Button
+              variant={answers[currentQuestion._id]?.answer === option ? "contained" : "outlined"}
+              fullWidth
+              onClick={() => handleAnswer(currentQuestion._id, option)}
+              sx={{ textAlign: "left", justifyContent: "flex-start" }}
+            >
+              {String.fromCharCode(65 + index)}. {option}
+            </Button>
+          </Box>
+        ))}
+      </Paper>
+
+      {/* Navigation */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Button 
+          variant="outlined"
+          onClick={() => setCurrent(Math.max(current - 1, 0))}
+          disabled={current === 0}
+        >
+          Previous
+        </Button>
+        
+        <Typography variant="body2" sx={{ alignSelf: "center" }}>
+          {current + 1} / {questions.length}
+        </Typography>
+        
+        {current < questions.length - 1 ? (
+          <Button 
+            variant="outlined"
+            onClick={() => setCurrent(Math.min(current + 1, questions.length - 1))}
+          >
+            Next
+          </Button>
+        ) : (
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={() => setConfirmDialogOpen(true)}
+          >
+            Submit Quiz
+          </Button>
+        )}
+      </Box>
+
+      {/* Question Navigator */}
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="subtitle2" gutterBottom>Jump to question:</Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {questions.map((_, index) => (
+            <Button
+              key={index}
+              variant={index === current ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setCurrent(index)}
+              sx={{
+                minWidth: "40px",
+                backgroundColor: answers[questions[index]._id] 
+                  ? (index === current ? undefined : "#e8f5e8")
+                  : undefined
+              }}
+            >
+              {index + 1}
+            </Button>
+          ))}
+        </Box>
+      </Paper>
+
+      {/* Admin Dialog */}
+      <Dialog open={adminDialogOpen} onClose={() => setAdminDialogOpen(false)}>
+        <DialogTitle>Admin Access Required</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>No attempts remaining. Enter admin code:</Typography>
+          <TextField
+            fullWidth
+            type="password"
+            value={adminInput}
+            onChange={(e) => setAdminInput(e.target.value)}
+            error={!!adminError}
+            helperText={adminError}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => navigate("/dashboard")}>Cancel</Button>
+          <Button onClick={handleAdminSubmit} variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm Dialog */}
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+        <DialogTitle>Submit Quiz?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to submit? You have answered {Object.keys(answers).length} out of {questions.length} questions.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => { setConfirmDialogOpen(false); handleFinalSubmit(); }} variant="contained">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+    </Container>
   );
 };
 

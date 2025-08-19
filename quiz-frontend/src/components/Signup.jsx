@@ -8,12 +8,22 @@ import {
   Paper,
   Link,
   IconButton,
+  Avatar,
+  Stack,
+  Fade,
+  Divider,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BrandHeader from "./BrandHeader";
-import googleIcon from "../images/google.png";
 import { jwtDecode } from "jwt-decode";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import LockIcon from "@mui/icons-material/Lock";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import QuizIcon from "@mui/icons-material/Quiz";
+import googleIcon from "../images/google.png";
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
@@ -22,6 +32,7 @@ const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
@@ -71,9 +82,10 @@ const SignupPage = () => {
 
       const data = await response.json();
       if (response.ok) {
-        toast.success("Signup successful!");
+        toast.success("Account created successfully!");
         localStorage.setItem("token", data.token);
         const decoded = jwtDecode(data.token);
+        localStorage.setItem("userId", decoded.userId);
         localStorage.setItem("username", decoded.username || username);
         navigate("/courses");
       } else {
@@ -81,7 +93,7 @@ const SignupPage = () => {
       }
     } catch (error) {
       console.error("Signup error:", error);
-      toast.error("An error occurred.");
+      toast.error("An error occurred during signup.");
     }
   };
 
@@ -109,13 +121,12 @@ const SignupPage = () => {
 
           const result = await res.json();
 
-          if (res.ok) {
-            toast.success("Signed in with Google!");
-            localStorage.setItem("token", result.token);
-
+          if (res.ok && result.token) {
             const decoded = jwtDecode(result.token);
-            localStorage.setItem("username", decoded.username || "User");
-
+            localStorage.setItem("token", result.token);
+            localStorage.setItem("userId", decoded.userId);
+            localStorage.setItem("username", decoded.username);
+            toast.success("Signed up with Google!");
             navigate("/courses");
           } else {
             toast.error(result.message || "Google signup failed.");
@@ -134,118 +145,129 @@ const SignupPage = () => {
     <Box
       sx={{
         minHeight: "100svh",
-        background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "white",
         p: 2,
       }}
     >
-      <Container maxWidth="xs">
-        <BrandHeader />
-        <Paper
-          elevation={5}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            backgroundColor: "#ffffffee",
-            color: "#000",
-          }}
-        >
-          <Typography
-            variant="h6"
-            align="center"
-            gutterBottom
-            sx={{ color: "#0f4c75", fontWeight: "bold" }}
-          >
-            Create Your Account
-          </Typography>
-
-          <form onSubmit={handleSignup}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
+      <Container maxWidth="sm">
+        <Fade in timeout={800}>
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Avatar
               sx={{
-                backgroundColor: "#0f4c75",
-                "&:hover": { backgroundColor: "#3282b8" },
-                mb: 1,
+                width: 100,
+                height: 100,
+                mx: "auto",
+                mb: 3,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               }}
             >
-              Sign Up
-            </Button>
-          </form>
-
-          <Typography variant="body2" align="center" sx={{ mt: 1, mb: 1 }}>
-            Or sign up with:
-          </Typography>
-
-          <Box display="flex" justifyContent="center" mb={2}>
-            <IconButton
-              onClick={handleGoogleSignup}
+              <QuizIcon sx={{ fontSize: 50, color: "white" }} />
+            </Avatar>
+            <Typography
+              variant="h3"
+              fontWeight="bold"
               sx={{
-                border: "1px solid #ccc",
-                backgroundColor: "#fff",
-                "&:hover": {
-                  backgroundColor: "#f7f7f7",
-                },
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
               }}
             >
-              <img
-                src={googleIcon}
-                alt="Google"
-                style={{ width: 24, height: 24 }}
-              />
-            </IconButton>
-          </Box>
-
-          <Box mt={3} textAlign="center">
-            <Typography variant="body2" sx={{ color: "#333" }}>
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                underline="none"
-                sx={{
-                  color: "#0f4c75",
-                  fontWeight: "bold",
-                  "&:hover": {
-                    textDecoration: "underline",
-                    color: "#3282b8",
-                  },
-                }}
-              >
-                Login here
-              </Link>
+              Join Us Today!
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              Create your IzyQuiz Lite account 🚀
             </Typography>
           </Box>
-        </Paper>
+        </Fade>
+
+        <Fade in timeout={1000}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.95)",
+              border: "1px solid rgba(255,255,255,0.3)",
+            }}
+          >
+            <Box sx={{ textAlign: "center", mb: 3 }}>
+              <PersonAddIcon color="primary" fontSize="large" />
+              <Typography variant="h5" fontWeight="bold">
+                Create Your Account
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Join thousands of learners worldwide
+              </Typography>
+            </Box>
+
+            <form onSubmit={handleSignup}>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth
+                  label="Username"
+                  variant="outlined"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  InputProps={{ startAdornment: <PersonIcon sx={{ mr: 1 }} /> }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Email"
+                  type="email"
+                  variant="outlined"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  InputProps={{ startAdornment: <EmailIcon sx={{ mr: 1 }} /> }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  variant="outlined"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  InputProps={{
+                    startAdornment: <LockIcon sx={{ mr: 1 }} />,
+                    endAdornment: (
+                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    ),
+                  }}
+                />
+
+                <Button variant="contained" type="submit" fullWidth size="large">
+                  Create Account
+                </Button>
+              </Stack>
+            </form>
+
+            <Divider sx={{ my: 3 }}>Or</Divider>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              size="large"
+              onClick={handleGoogleSignup}
+              startIcon={<img src={googleIcon} alt="Google" style={{ width: 24, height: 24 }} />}
+            >
+              Google
+            </Button>
+
+            <Typography variant="body2" align="center" sx={{ mt: 3 }}>
+              Already have an account?{' '}
+              <Link href="/login" underline="hover">
+                Sign in here
+              </Link>
+            </Typography>
+          </Paper>
+        </Fade>
       </Container>
     </Box>
   );

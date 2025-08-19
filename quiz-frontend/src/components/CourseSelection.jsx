@@ -15,109 +15,54 @@ import {
   useTheme,
   IconButton,
   Stack,
+  Avatar,
+  Fade,
+  Chip,
+  Tooltip,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import LogoutIcon from "@mui/icons-material/Logout";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import TimerIcon from "@mui/icons-material/Timer";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import QuizIcon from "@mui/icons-material/Quiz";
 import LeaderboardModal from "../components/LeaderboardModal";
-import UserAvatar from "../components/UseAvater";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import GitHubIcon from "@mui/icons-material/GitHub";
+import WithSidebarLayout from "../layouts/WithSidebarLayout";
 
 const courses = [
-  {
-    id: "GST112",
-    name: "Nigerian Peoples and Culture",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "GET102",
-    name: "Engineering Graphics and Solid Modelling I",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "CHM102",
-    name: "General Chemistry II",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "PHY003",
-    name: "Magnetism and Electromagnetism",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "PHY004",
-    name: "Nuclear Physics and Radioactivity",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "CRS101",
-    name: "Introduction to Christian Religious Studies",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "MTH204",
-    name: "Calculus and Mathematical Analysis",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "LAW106",
-    name: "Introduction to Nigerian Law",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "ECON108",
-    name: "Principles of Economics",
-    questions: 25,
-    duration: "5 min",
-  },
-  {
-    id: "MCB103",
-    name: "General Microbiology I",
-    questions: 25,
-    duration: "5 min",
-  },
-  { id: "PHY103", name: "General Physics I", questions: 25, duration: "5 min" },
+  { id: "GST112", name: "Nigerian Peoples and Culture", questions: 25, duration: "5 min", color: "#3b4cca" }, // navy-ish blue
+  { id: "GET102", name: "Engineering Graphics and Solid Modelling I", questions: 25, duration: "5 min", color: "#553c9a" }, // deep purple
+  { id: "CHM102", name: "General Chemistry II", questions: 25, duration: "5 min", color: "#6a0572" }, // muted magenta
+  { id: "PHY003", name: "Magnetism and Electromagnetism", questions: 25, duration: "5 min", color: "#8a1c1c" }, // dark red
+  { id: "PHY004", name: "Nuclear Physics and Radioactivity", questions: 25, duration: "5 min", color: "#264653" }, // dark cyan blue
+  { id: "CRS101", name: "Introduction to Christian Religious Studies", questions: 25, duration: "5 min", color: "#2a9d8f" }, // deep teal
+  { id: "MTH204", name: "Calculus and Mathematical Analysis", questions: 25, duration: "5 min", color: "#3b4cca" }, // reused navy-ish blue
+  { id: "LAW106", name: "Introduction to Nigerian Law", questions: 25, duration: "5 min", color: "#553c9a" }, // reused deep purple
+  { id: "ECON108", name: "Principles of Economics", questions: 25, duration: "5 min", color: "#6a0572" }, // reused muted magenta
+  { id: "MCB103", name: "General Microbiology I", questions: 25, duration: "5 min", color: "#8a1c1c" }, // reused dark red
+  { id: "PHY103", name: "General Physics I", questions: 25, duration: "5 min", color: "#264653" } // reused dark cyan blue
 ];
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
-  if (!token) {
-    return {};
-  }
-  return { Authorization: `Bearer ${token}` };
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
-
 
 const isTokenExpired = () => {
   try {
     const token = localStorage.getItem("token");
     if (!token) return true;
-
     const [, payloadBase64] = token.split(".");
-    // Normalize base64 to prevent atob errors
     const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
-
-    const payloadJSON = atob(padded);
-    const payload = JSON.parse(payloadJSON);
-
+    const payload = JSON.parse(atob(padded));
     return Date.now() >= payload.exp * 1000;
-  } catch (err) {
+  } catch {
     return true;
   }
 };
-
 
 const CourseSelection = () => {
   const navigate = useNavigate();
@@ -129,26 +74,14 @@ const CourseSelection = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  // Token expiry check on load
   useEffect(() => {
-    const expired = isTokenExpired(); 
-    if (expired) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    toast.error("Session expired. Please login again.");
-    navigate("/login");
-  }
-
-
+    if (isTokenExpired()) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
+      toast.error("Session expired. Please login again.");
+      navigate("/login");
+    }
   }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    toast.success("Logged out successfully.");
-    navigate("/login");
-  };
 
   const handleSelectCourse = async (courseId) => {
     const token = localStorage.getItem("token");
@@ -162,231 +95,172 @@ const CourseSelection = () => {
     }
 
     setLoadingCourse(courseId);
-
     try {
       let url = `${API_BASE_URL}/check-attempts?course_id=${encodeURIComponent(courseId)}&is_admin=${isAdmin}`;
-      if (isAdmin && userId) {
-        url += `&user_id=${encodeURIComponent(userId)}`;
-      }
-
-      const headers = getAuthHeaders();
-
-      const response = await axios.get(url, { headers });
+      if (isAdmin && userId) url += `&user_id=${encodeURIComponent(userId)}`;
+      const response = await axios.get(url, { headers: getAuthHeaders() });
 
       if (response.data.success && response.data.remaining_attempts > 0) {
-        toast.success(
-          `Starting quiz! You have ${response.data.remaining_attempts} attempts remaining.`
-        );
+        toast.success(`Starting quiz! You have ${response.data.remaining_attempts} attempts remaining.`);
         setTimeout(() => navigate(`/quiz/${courseId}`), 1200);
-      } else if (!response.data.success) {
-        toast.error(response.data.message || "Could not fetch attempt info.");
-        setLoadingCourse(null);
       } else {
-        toast.error("No attempts remaining for this quiz.");
+        toast.error(response.data.message || "No attempts remaining for this quiz.");
         setLoadingCourse(null);
       }
     } catch (error) {
       setLoadingCourse(null);
-
-      if (error.response) {
-        // Server responded but with error
-        toast.error(error.response.data?.message || "Server error checking attempts.");
-      } else if (error.request) {
-        // No response
-        toast.error("No response from server.");
-      } else {
-        // Other errors
-        toast.error("Something went wrong checking attempts.");
-      }
+      toast.error(error.response?.data?.message || "Error checking attempts.");
     }
   };
-
 
   const handleLeaderboardOpen = async (courseId) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/leaderboard?course_id=${encodeURIComponent(courseId)}`,
-        { headers: getAuthHeaders() } // consistent usage here
+        { headers: getAuthHeaders() }
       );
       setLeaderboardData(response.data.leaderboard);
       setSelectedCourseId(courseId);
       setLeaderboardOpen(true);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load leaderboard.");
     }
   };
 
-  const getCardWidth = () => (isMobile ? "100%" : isTablet ? 280 : 320);
-  const getCardHeight = () => (isMobile ? 250 : 260);
+  const getCardWidth = () => (isMobile ? "100%" : isTablet ? 320 : 360);
+  const getCardHeight = () => (isMobile ? 280 : 300);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-        background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
-        color: "white",
-      }}
-    >
-      <Container sx={{ py: 7 }}>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={8}
-        >
-          <Box display="flex" alignItems="center">
-            <Box
-              component="img"
-              src="https://res.cloudinary.com/dlytakuhd/image/upload/v1748332310/logo_z5esiq.png"
-              alt="Company Logo"
-              sx={{ height: 50, width: 50, mr: 2 }}
-            />
-          </Box>
-
-          <Typography
-            variant="h5"
-            fontWeight="bold"
+    <WithSidebarLayout>
+  <Box
+    sx={{
+      minHeight: "calc(100vh - 64px)",
+      backgroundColor: "#f5f7fa",
+      position: "relative",
+      overflow: "hidden",
+    }}
+  >
+    <Container sx={{ py: 6, position: "relative", zIndex: 1 }}>
+      <Fade in timeout={600}>
+        <Box sx={{ textAlign: "center", mb: 6 }}>
+          <Avatar
             sx={{
-              fontSize: isMobile ? "1.6rem" : "2.4rem",
-              textAlign: "center",
-              flex: 1,
-              ml: isMobile ? 0 : "-50px",
+              width: 80,
+              height: 80,
+              mx: "auto",
+              mb: 3,
+              backgroundColor: "primary.main",
             }}
           >
-            IzyQuiz Lite
+            <QuizIcon sx={{ fontSize: 40, color: "white" }} />
+          </Avatar>
+          <Typography variant={isMobile ? "h4" : "h3"} fontWeight="bold" mb={2}>
+            Choose Your Course
           </Typography>
-
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <UserAvatar username={localStorage.getItem("username")} />
-            <IconButton
-              aria-label="Logout"
-              onClick={handleLogout}
-              sx={{
-                color: "#fff",
-                border: "1px solid #fff",
-                p: 1,
-                "&:hover": { color: "#f44336", borderColor: "#f44336" },
-              }}
-            >
-              <LogoutIcon />
-            </IconButton>
-          </Stack>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: "auto" }}>
+            Select a course to begin your quiz journey. Each quiz contains 25 questions with a 5-minute time limit.
+          </Typography>
         </Box>
+      </Fade>
 
-        <Typography
-          variant="h3"
-          align="center"
-          gutterBottom
-          sx={{ fontWeight: "bold", mb: 5 }}
-        >
-          Select a Course to Start Quiz
-        </Typography>
-      </Container>
+      <Fade in timeout={800}>
+        <Box display="flex" flexWrap="wrap" justifyContent="center" gap={3} sx={{ mb: 6 }}>
+          {courses.map((course, index) => (
+            <Fade in timeout={800 + index * 100} key={course.id}>
+              <Card
+                sx={{
+                  width: getCardWidth(),
+                  height: getCardHeight(),
+                  borderRadius: 2,
+                  backgroundColor: "#fff",
+                  boxShadow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  position: "relative",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <Avatar
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        backgroundColor: course.color,
+                        mr: 2,
+                      }}
+                    >
+                      <SchoolIcon sx={{ color: "white", fontSize: 24 }} />
+                    </Avatar>
+                    <Chip label={course.id} size="small" sx={{ color: course.color }} />
+                  </Box>
 
-      <Container sx={{ flex: 1 }}>
-        <Box
-          display="flex"
-          flexWrap="wrap"
-          justifyContent="center"
-          gap={5}
-          sx={{ mb: 7 }}
-        >
-          {courses.map((course) => (
-            <Card
-              key={course.id}
-              sx={{
-                width: getCardWidth(),
-                height: getCardHeight(),
-                borderRadius: 3,
-                backgroundColor: "#ffffffdd",
-                color: "#000",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                transition: "transform 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-5px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
-                },
-              }}
-            >
-              <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <SchoolIcon sx={{ fontSize: 30, mr: 1, color: "#0f4c75" }} />
-                  <Typography variant="h6" fontWeight="bold">
-                    {course.id}
+                  <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ height: isMobile ? "auto" : 60 }}>
+                    {course.name}
                   </Typography>
-                </Box>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontSize: "0.95rem",
-                    lineHeight: 1.3,
-                    mb: 2,
-                    minHeight: "40px",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
-                >
-                  {course.name}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 0.5, lineHeight: "30px" }}
-                >
-                  <strong>Questions:</strong> {course.questions}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Duration:</strong> {course.duration}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  sx={{ backgroundColor: "#0f4c75" }}
-                  onClick={() => handleSelectCourse(course.id)}
-                  disabled={!!loadingCourse}
-                >
-                  {loadingCourse === course.id ? "Checking..." : "Start Quiz"}
-                </Button>
-                <DashboardIcon
-                  onClick={() => handleLeaderboardOpen(course.id)}
-                  sx={{
-                    fontSize: 26,
-                    color: "#0f4c75",
-                    cursor: "pointer",
-                    ml: 1,
-                    "&:hover": { color: "#3282b8" },
-                  }}
-                />
-              </CardActions>
-              {loadingCourse === course.id && (
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: "rgba(255,255,255,0.8)",
-                    borderRadius: 3,
-                  }}
-                >
-                  <CircularProgress />
-                </Box>
-              )}
-            </Card>
+
+                  <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                    <Box display="flex" alignItems="center">
+                      <QuestionAnswerIcon sx={{ fontSize: 18, color: course.color, mr: 0.5 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {course.questions} Questions
+                      </Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center">
+                      <TimerIcon sx={{ fontSize: 18, color: course.color, mr: 0.5 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {course.duration}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+
+                <CardActions sx={{ p: 3, pt: 0 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    startIcon={loadingCourse === course.id ? null : <PlayArrowIcon />}
+                    onClick={() => handleSelectCourse(course.id)}
+                    disabled={!!loadingCourse}
+                  >
+                    {loadingCourse === course.id ? <CircularProgress size={20} sx={{ color: "white" }} /> : "Start Quiz"}
+                  </Button>
+
+                  <Tooltip title="View Leaderboard" arrow>
+                    <IconButton onClick={() => handleLeaderboardOpen(course.id)} sx={{ ml: 1, color: course.color }}>
+                      <LeaderboardIcon />
+                    </IconButton>
+                  </Tooltip>
+                </CardActions>
+
+                {loadingCourse === course.id && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      zIndex: 10,
+                    }}
+                  >
+                    <CircularProgress size={40} sx={{ color: course.color, mb: 2 }} />
+                    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                      Preparing your quiz...
+                    </Typography>
+                  </Box>
+                )}
+              </Card>
+            </Fade>
           ))}
         </Box>
-      </Container>
+      </Fade>
 
       <LeaderboardModal
         open={leaderboardOpen}
@@ -394,50 +268,10 @@ const CourseSelection = () => {
         leaderboard={leaderboardData}
         courseId={selectedCourseId}
       />
+    </Container>
+  </Box>
+</WithSidebarLayout>
 
-      <Box
-        component="footer"
-        sx={{
-          py: 2,
-          textAlign: "center",
-          color: "#ccc",
-          backgroundColor: "#0f2027",
-          opacity: 0.5,
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="center"
-          alignItems="center"
-          spacing={1}
-        >
-          <Stack direction="row" spacing={1}>
-            <IconButton
-              aria-label="LinkedIn profile"
-              href="https://linkedin.com/in/asimiisrael"
-              target="_blank"
-              rel="noopener"
-              sx={{ color: "#ccc" }}
-            >
-              <LinkedInIcon />
-            </IconButton>
-            <IconButton
-              aria-label="GitHub profile"
-              href="https://github.com/Asimi1234"
-              target="_blank"
-              rel="noopener"
-              sx={{ color: "#ccc" }}
-            >
-              <GitHubIcon />
-            </IconButton>
-          </Stack>
-          <Typography variant="body2">
-            © {new Date().getFullYear()} Asimi Israel Ayomikun. All rights
-            reserved.
-          </Typography>
-        </Stack>
-      </Box>
-    </Box>
   );
 };
 

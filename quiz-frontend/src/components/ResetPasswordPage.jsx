@@ -6,19 +6,23 @@ import {
   TextField,
   Button,
   Paper,
-  useTheme,
-  useMediaQuery,
+  Avatar,
+  Stack,
+  Fade,
+  Link,
+  Alert,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
+import SecurityIcon from "@mui/icons-material/Security";
+
 
 const API_BASE = process.env.REACT_APP_API_BASE;
 
 const ResetPasswordPage = () => {
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -32,9 +36,17 @@ const ResetPasswordPage = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     if (!token.trim() || !newPassword.trim()) {
       toast.error("Please fill all fields.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -60,105 +72,147 @@ const ResetPasswordPage = () => {
       }
     } catch (error) {
       console.error("Password reset error:", error);
-      toast.error("An error occurred.");
+      toast.error("An error occurred while resetting your password.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Box
       sx={{
-        height: "100svh",
+        minHeight: "100svh",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(to right, #0f2027, #203a43, #2c5364)",
+        color: "#2c3e50",
         p: 2,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <Container maxWidth="xs">
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={4}
-        >
-          <Box display="flex" alignItems="center">
+      <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1 }}>
+        <Fade in timeout={600}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 4,
+            }}
+          >
             <Box
               component="img"
               src="https://res.cloudinary.com/dlytakuhd/image/upload/v1748332310/logo_z5esiq.png"
               alt="Company Logo"
-              sx={{ height: 50, width: 50, mr: 2 }}
+              sx={{ height: 60, width: 60, mr: 2, borderRadius: 2 }}
             />
-          </Box>
-
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            sx={{
-              fontSize: isMobile ? "1.6rem" : "2.2rem",
-              textAlign: "center",
-              flex: 1,
-              ml: isMobile ? 0 : "-50px",
-              color: "#FFFFFF",
-            }}
-          >
-            IzyQuiz Lite
-          </Typography>
-
-          <Box width={50} />
-        </Box>
-
-        <Paper
-          elevation={5}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            backgroundColor: "#ffffffee",
-            color: "#000",
-          }}
-        >
-          <Typography
-            variant={isMobile ? "h5" : "h4"}
-            fontWeight="bold"
-            gutterBottom
-            align="center"
-          >
-            Reset Your Password
-          </Typography>
-
-          <form onSubmit={handleResetPassword}>
-            {!token && (
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Reset Token"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-            )}
-            <TextField
-              fullWidth
-              variant="outlined"
-              label="New Password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              sx={{ mb: 3 }}
-            />
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
+            <Typography
+              variant="h4"
+              fontWeight="bold"
               sx={{
-                backgroundColor: "#0f4c75",
-                "&:hover": { backgroundColor: "#3282b8" },
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
               }}
             >
+              IzyQuiz Lite
+            </Typography>
+          </Box>
+        </Fade>
+
+        <Fade in timeout={800}>
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Avatar
+              sx={{
+                width: 100,
+                height: 100,
+                mx: "auto",
+                mb: 3,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              <SecurityIcon sx={{ fontSize: 50, color: "white" }} />
+            </Avatar>
+            <Typography
+              variant="h3"
+              fontWeight="bold"
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                mb: 1,
+              }}
+            >
+              Set New Password
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              Choose a strong password to secure your account 🔒
+            </Typography>
+          </Box>
+        </Fade>
+
+        <Fade in timeout={1000}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+              mt: 4,
+            }}
+          >
+            <Typography variant="h5" fontWeight="bold" gutterBottom>
               Reset Password
-            </Button>
-          </form>
-        </Paper>
+            </Typography>
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Your new password must be at least 6 characters long.
+            </Alert>
+            <form onSubmit={handleResetPassword}>
+              <Stack spacing={3}>
+                {!token && (
+                  <TextField
+                    fullWidth
+                    label="Reset Token"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                  />
+                )}
+                <TextField
+                  fullWidth
+                  type="password"
+                  label="New Password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <Button
+                  fullWidth
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  disabled={isSubmitting}
+                  sx={{ borderRadius: 2, py: 1.5 }}
+                >
+                  {isSubmitting ? "Resetting..." : "Reset Password"}
+                </Button>
+              </Stack>
+            </form>
+            <Box sx={{ textAlign: "center", mt: 4 }}>
+              <Typography variant="body2">
+                Remember your password?{' '}
+                <Link href="/login" underline="hover">
+                  Sign in
+                </Link>
+              </Typography>
+            </Box>
+          </Paper>
+        </Fade>
       </Container>
     </Box>
   );
