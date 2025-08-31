@@ -306,14 +306,14 @@ const Quiz = () => {
           
           <Typography variant="h6" gutterBottom>Review:</Typography>
           {questions.map((q, index) => {
-            const userAnswer = answers[q._id]?.answer || "";
-            const correctAnswer = correctAnswers[q._id] || "";
+            const userAnswer = answers[q.questionId]?.answer || "";
+            const correctAnswer = correctAnswers[q.questionId] || "";
             const isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
             
             return (
               <Box key={index} sx={{ mb: 2, p: 2, border: "1px solid #ddd" }}>
                 <Typography variant="subtitle1" fontWeight="bold">
-                  {index + 1}. {q.text}
+                  {index + 1}. {q.question}
                 </Typography>
                 <Typography color={isCorrect ? "green" : "red"}>
                   Your answer: {userAnswer || "No answer"}
@@ -361,16 +361,16 @@ const Quiz = () => {
           Question {current + 1} of {questions.length}
         </Typography>
         <Typography variant="body1" sx={{ mb: 3 }}>
-          {currentQuestion?.text}
+          {currentQuestion?.question}
         </Typography>
 
         {/* Answer Options */}
         {currentQuestion?.options?.map((option, index) => (
           <Box key={index} sx={{ mb: 1 }}>
             <Button
-              variant={answers[currentQuestion._id]?.answer === option ? "contained" : "outlined"}
+              variant={answers[currentQuestion.questionId]?.answer === option ? "contained" : "outlined"}
               fullWidth
-              onClick={() => handleAnswer(currentQuestion._id, option)}
+              onClick={() => handleAnswer(currentQuestion.questionId, option)}
               sx={{ textAlign: "left", justifyContent: "flex-start" }}
             >
               {String.fromCharCode(65 + index)}. {option}
@@ -423,7 +423,7 @@ const Quiz = () => {
               onClick={() => setCurrent(index)}
               sx={{
                 minWidth: "40px",
-                backgroundColor: answers[questions[index]._id] 
+                backgroundColor: answers[questions[index].questionId] 
                   ? (index === current ? undefined : "#e8f5e8")
                   : undefined
               }}

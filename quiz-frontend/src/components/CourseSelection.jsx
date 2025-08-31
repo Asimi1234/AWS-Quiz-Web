@@ -30,17 +30,23 @@ import LeaderboardModal from "../components/LeaderboardModal";
 import WithSidebarLayout from "../layouts/WithSidebarLayout";
 
 const courses = [
-  { id: "GST112", name: "Nigerian Peoples and Culture", questions: 25, duration: "5 min", color: "#3b4cca" }, // navy-ish blue
-  { id: "GET102", name: "Engineering Graphics and Solid Modelling I", questions: 25, duration: "5 min", color: "#553c9a" }, // deep purple
-  { id: "CHM102", name: "General Chemistry II", questions: 25, duration: "5 min", color: "#6a0572" }, // muted magenta
-  { id: "PHY003", name: "Magnetism and Electromagnetism", questions: 25, duration: "5 min", color: "#8a1c1c" }, // dark red
-  { id: "PHY004", name: "Nuclear Physics and Radioactivity", questions: 25, duration: "5 min", color: "#264653" }, // dark cyan blue
-  { id: "CRS101", name: "Introduction to Christian Religious Studies", questions: 25, duration: "5 min", color: "#2a9d8f" }, // deep teal
-  { id: "MTH204", name: "Calculus and Mathematical Analysis", questions: 25, duration: "5 min", color: "#3b4cca" }, // reused navy-ish blue
-  { id: "LAW106", name: "Introduction to Nigerian Law", questions: 25, duration: "5 min", color: "#553c9a" }, // reused deep purple
-  { id: "ECON108", name: "Principles of Economics", questions: 25, duration: "5 min", color: "#6a0572" }, // reused muted magenta
-  { id: "MCB103", name: "General Microbiology I", questions: 25, duration: "5 min", color: "#8a1c1c" }, // reused dark red
-  { id: "PHY103", name: "General Physics I", questions: 25, duration: "5 min", color: "#264653" } // reused dark cyan blue
+  { id: "OOU-PHY", name: "General Physics PQ", questions: 25, duration: "5 min", color: "#568d83ff" },
+  { id: "OOU-CHM", name: "General Chemistry PQ", questions: 25, duration: "5 min", color: "#dcbc52ff" },
+  { id: "OOU-BIO", name: "General Biology PQ", questions: 25, duration: "5 min", color: "#74765eff" },
+  { id: "OOU-ENG", name: "English PQ", questions: 25, duration: "5 min", color: "#025e3fff" },
+  { id: "OOU-GLK", name: "General Knowledge PQ", questions: 25, duration: "5 min", color: "#065cb3ff" },
+  { id: "GST112", name: "Nigerian Peoples and Culture", questions: 25, duration: "5 min", color: "#3b4cca" }, 
+  { id: "GET102", name: "Engineering Graphics and Solid Modelling I", questions: 25, duration: "5 min", color: "#553c9a" },
+  { id: "CHM102", name: "General Chemistry II", questions: 25, duration: "5 min", color: "#6a0572" }, 
+  { id: "PHY003", name: "Magnetism and Electromagnetism", questions: 25, duration: "5 min", color: "#8a1c1c" },
+  { id: "PHY004", name: "Nuclear Physics and Radioactivity", questions: 25, duration: "5 min", color: "#264653" },
+  { id: "CRS101", name: "Introduction to Christian Religious Studies", questions: 25, duration: "5 min", color: "#2a9d8f" },
+  { id: "MTH204", name: "Calculus and Mathematical Analysis", questions: 25, duration: "5 min", color: "#3b4cca" },
+  { id: "LAW106", name: "Introduction to Nigerian Law", questions: 25, duration: "5 min", color: "#553c9a" }, 
+  { id: "ECON108", name: "Principles of Economics", questions: 25, duration: "5 min", color: "#6a0572" },
+  { id: "MCB103", name: "General Microbiology I", questions: 25, duration: "5 min", color: "#8a1c1c" }, 
+  { id: "PHY103", name: "General Physics I", questions: 25, duration: "5 min", color: "#264653" }, 
+  
 ];
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE;

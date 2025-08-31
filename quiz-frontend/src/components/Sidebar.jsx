@@ -12,10 +12,9 @@ import {
   Divider,
   Paper,
 } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
+
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
-import QuizIcon from "@mui/icons-material/Quiz";
-import CreateIcon from "@mui/icons-material/Create";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 const drawerWidth = 280;
