@@ -17,11 +17,15 @@ const LeaderboardModal = ({ open, onClose, leaderboard, courseId }) => {
       <DialogTitle>{courseId} Top 10 Scores</DialogTitle>
       <DialogContent dividers>
         {leaderboard.length === 0 ? (
-          <Typography variant="body2">No scores yet for this course.</Typography>
+          <Typography variant="body2">
+            No scores yet for this course.
+            <br />
+            Be the first to take the quiz and claim the top spot!
+          </Typography>
         ) : (
           <List>
             {leaderboard.map((user, index) => (
-              <ListItem key={user.user_id}>
+              <ListItem key={`${user.user_id}-${index}`}>
                 <ListItemAvatar>
                   <UserAvatar username={user.username} />
                 </ListItemAvatar>

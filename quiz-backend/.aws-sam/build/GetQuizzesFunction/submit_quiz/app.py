@@ -37,23 +37,30 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Missing course_id or score"})
             }
 
-        # === Update the score in DynamoDB ===
-        table.update_item(
-            Key={
+        # === Create unique composite key with timestamp ===
+        timestamp = datetime.utcnow().isoformat()
+        composite_course_id = f"{course_id}#{timestamp}"
+
+        # === Store NEW attempt (don't update existing) ===
+        table.put_item(
+            Item={
                 'user_id': user_id,
-                'course_id': course_id
-            },
-            UpdateExpression='SET score = :s, last_attempt = :ts',
-            ExpressionAttributeValues={
-                ':s': final_score,
-                ':ts': datetime.utcnow().isoformat()
+                'course_id': composite_course_id,      # Composite sort key
+                'base_course_id': course_id,           # Original course_id for GSI
+                'score': final_score,
+                'timestamp': timestamp,
+                'last_attempt': timestamp
             }
         )
 
         return {
             "statusCode": 200,
             "headers": cors_headers(),
-            "body": json.dumps({"success": True, "message": "Score submitted successfully."}, default=decimal_default)
+            "body": json.dumps({
+                "success": True, 
+                "message": "Score submitted successfully.",
+                "attempt_id": composite_course_id
+            }, default=decimal_default)
         }
 
     except Exception as e:

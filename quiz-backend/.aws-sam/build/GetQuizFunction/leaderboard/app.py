@@ -31,42 +31,64 @@ def lambda_handler(event, context):
 
         # Query top attempts by score using a GSI (CourseIndex)
         response = quiz_attempts_table.query(
-            IndexName='CourseIndex',
-            KeyConditionExpression=Key('course_id').eq(course_id),
+            IndexName='CourseIndexNew',
+            KeyConditionExpression=Key('base_course_id').eq(course_id),
             ProjectionExpression="user_id, course_id, score",
             ScanIndexForward=False,  # Highest scores first
-            Limit=25  # Buffer in case of duplicates or filtering
+            Limit=50  # Increased buffer to ensure we get top 10 after sorting
         )
 
         items = response.get("Items", [])
-        # Ensure we have top 10 sorted in descending score order
+        
+        # Handle empty results gracefully
+        if not items:
+            return {
+                "statusCode": 200,
+                "headers": cors_headers(),
+                "body": json.dumps({
+                    "leaderboard": [],
+                    "message": "No attempts found for this course yet"
+                }, default=decimal_default)
+            }
+        
+        # Sort all attempts by score (highest first) and take top 10
         top_scores = sorted(items, key=lambda x: x.get('score', 0), reverse=True)[:10]
 
-        # Extract unique user_ids
-        user_ids = list({attempt['user_id'] for attempt in top_scores})
-        keys = [{'user_id': uid} for uid in user_ids[:100]]  # BatchGetItem limit
+        # Extract unique user_ids for username lookup (avoid duplicate API calls)
+        unique_user_ids = list(set([attempt['user_id'] for attempt in top_scores]))
+        
+        # Only fetch usernames if we have users to fetch
+        user_map = {}
+        if unique_user_ids:
+            keys = [{'user_id': uid} for uid in unique_user_ids[:100]]  # BatchGetItem limit
 
-        # Fetch usernames
-        users_response = dynamodb.batch_get_item(
-            RequestItems={
-                'Users': {
-                    'Keys': keys,
-                    'ProjectionExpression': 'user_id, username'
+            # Fetch usernames for unique users
+            users_response = dynamodb.batch_get_item(
+                RequestItems={
+                    'Users': {
+                        'Keys': keys,
+                        'ProjectionExpression': 'user_id, username'
+                    }
                 }
-            }
-        )
-        users = users_response.get('Responses', {}).get('Users', [])
-        user_map = {user['user_id']: user['username'] for user in users}
+            )
+            users = users_response.get('Responses', {}).get('Users', [])
+            user_map = {user['user_id']: user['username'] for user in users}
 
-        # Add usernames and ranks
-        for idx, entry in enumerate(top_scores, 1):
-            entry['username'] = user_map.get(entry['user_id'], f"User {entry['user_id'][:6]}")
-            entry['rank'] = idx
+        # Add usernames and ranks to ALL attempts (including multiple per user)
+        leaderboard = []
+        for idx, attempt in enumerate(top_scores, 1):
+            leaderboard.append({
+                'user_id': attempt['user_id'],
+                'course_id': attempt['course_id'],
+                'score': attempt['score'],
+                'username': user_map.get(attempt['user_id'], f"User {attempt['user_id'][:6]}"),
+                'rank': idx
+            })
 
         return {
             "statusCode": 200,
             "headers": cors_headers(),
-            "body": json.dumps({"leaderboard": top_scores}, default=decimal_default)
+            "body": json.dumps({"leaderboard": leaderboard}, default=decimal_default)
         }
 
     except Exception as e:
